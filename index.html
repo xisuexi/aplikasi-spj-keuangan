@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- html2pdf.js for direct PDF download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -88,9 +90,8 @@
             <form id="loginForm" class="p-6 space-y-4">
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 flex items-start justify-between">
                     <div>
-                        <span class="font-semibold block mb-0.5"><i class="fa-solid fa-circle-info mr-1"></i> Akun Login Default:</span>
-                        Username: <code class="font-mono font-bold bg-blue-100 px-1 py-0.5 rounded">admin</code> | 
-                        Password: <code class="font-mono font-bold bg-blue-100 px-1 py-0.5 rounded">admin123</code>
+                        <span class="font-semibold block mb-0.5"><i class="fa-solid fa-circle-info mr-1"></i> Akun Login:</span>
+                        <span id="loginHintText">Username: <code class="font-mono font-bold bg-blue-100 px-1 py-0.5 rounded" id="hintUser">admin</code> | Pass: <code class="font-mono font-bold bg-blue-100 px-1 py-0.5 rounded" id="hintPass">admin123</code></span>
                     </div>
                     <button type="button" onclick="fillQuickLogin()" class="text-blue-600 hover:text-blue-800 font-medium underline text-xs whitespace-nowrap ml-2">Isi Otomatis</button>
                 </div>
@@ -156,8 +157,8 @@
                 <a href="#" onclick="switchTab('rekapitulasi')" id="nav-rekapitulasi" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
                     <i class="fa-solid fa-calculator w-6 text-center text-base mr-2"></i> Rekapitulasi & Laporan
                 </a>
-                <a href="#" onclick="switchTab('pengaturan')" id="nav-pengaturan" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
-                    <i class="fa-solid fa-gears w-6 text-center text-base mr-2"></i> Pengaturan Sistem
+                <a href="#" onclick="switchTab('profil-pengaturan')" id="nav-profil-pengaturan" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                    <i class="fa-solid fa-user-gear w-6 text-center text-base mr-2"></i> Pengaturan Akun & Profil
                 </a>
             </nav>
 
@@ -456,82 +457,70 @@
                                         <span class="text-[11px] font-medium text-slate-600 block">Nota / Toko</span>
                                         <input type="file" id="fileNota" class="hidden" onchange="updateFileStatus(this, 'statusNota')">
                                         <span id="statusNota" class="text-[10px] text-slate-400 mt-1 block">Belum ada</span>
-                                    </label>
+                            <!-- Upload Berkas Lampiran & Upload Nota Lengkap -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2">Upload File Nota Belanja & Dokumen SPJ (PDF / PNG / JPG)</label>
+                                
+                                <!-- Drag & Drop Box Nota Utama -->
+                                <div id="dropZone" onclick="document.getElementById('fileNotaInput').click()" class="border-2 border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 rounded-xl p-5 text-center cursor-pointer transition-all mb-4">
+                                    <i class="fa-solid fa-cloud-arrow-up text-blue-500 text-3xl mb-2"></i>
+                                    <p class="text-xs font-bold text-slate-700">Klik atau Drag & Drop Berkas Nota / Kwitansi Lengkap Di Sini</p>
+                                    <p class="text-[10px] text-slate-500 mt-0.5">Mendukung format PDF, PNG, JPG (Maks 5MB per file)</p>
+                                    <input type="file" id="fileNotaInput" multiple accept=".pdf,image/*" class="hidden" onchange="handleNotaFilesUpload(this.files)">
+                                </div>
 
-                                    <label class="border border-dashed border-slate-300 rounded-lg p-3 text-center cursor-pointer hover:bg-slate-50 transition-all block">
-                                        <i class="fa-solid fa-file-signature text-slate-400 text-xl mb-1 block"></i>
-                                        <span class="text-[11px] font-medium text-slate-600 block">BAST</span>
-                                        <input type="file" id="fileBast" class="hidden" onchange="updateFileStatus(this, 'statusBast')">
-                                        <span id="statusBast" class="text-[10px] text-slate-400 mt-1 block">Belum ada</span>
-                                    </label>
-
-                                    <label class="border border-dashed border-slate-300 rounded-lg p-3 text-center cursor-pointer hover:bg-slate-50 transition-all block">
-                                        <i class="fa-solid fa-envelope-open-text text-slate-400 text-xl mb-1 block"></i>
-                                        <span class="text-[11px] font-medium text-slate-600 block">Nota Dinas</span>
-                                        <input type="file" id="fileNodin" class="hidden" onchange="updateFileStatus(this, 'statusNodin')">
-                                        <span id="statusNodin" class="text-[10px] text-slate-400 mt-1 block">Belum ada</span>
-                                    </label>
+                                <!-- Dynamic Uploaded Nota Files Preview Grid -->
+                                <div id="uploadedFilesPreview" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                    <!-- Injected via JS -->
                                 </div>
                             </div>
 
                             <!-- Action Submit -->
-                            <div class="flex justify-end space-x-3 pt-3 border-t border-slate-200">
-                                <button type="button" onclick="switchTab('daftar-spj')" class="px-4 py-2 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg transition-all">
-                                    Batal
-                                </button>
-                                <button type="submit" class="px-5 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all">
-                                    <i class="fa-solid fa-paper-plane mr-1"></i> Simpan & Ajukan SPJ
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </section>
+                <!-- SECTION 5: PENGATURAN AKUN & PROFIL -->
+                <section id="view-profil-pengaturan" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
+                        <!-- Ubah Account Credentials -->
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                            <h3 class="text-base font-bold text-slate-800 mb-1"><i class="fa-solid fa-key text-blue-600 mr-2"></i>Ubah Username & Password</h3>
+                            <p class="text-xs text-slate-500 mb-4">Perbarui kredensial akun login Anda secara mandiri.</p>
 
-                <!-- SECTION 4: REKAPITULASI & LAPORAN -->
-                <section id="view-rekapitulasi" class="tab-content hidden space-y-6">
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                        <h3 class="text-base font-bold text-slate-800 mb-1">Rekapitulasi Anggaran per Divisi</h3>
-                        <p class="text-xs text-slate-500 mb-6">Ringkasan total pencairan realisasi dana berdasarkan Surat Pertanggungjawaban.</p>
+                            <form id="updateProfileForm" onsubmit="handleProfileUpdate(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Username Baru</label>
+                                    <input type="text" id="newUsername" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="divisiStatCards">
-                            <!-- Injected by JS -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password Lama</label>
+                                    <input type="password" id="oldPassword" required placeholder="••••••••" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password Baru</label>
+                                    <input type="password" id="newPassword" required placeholder="••••••••" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                </div>
+
+                                <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition-all">
+                                    <i class="fa-solid fa-floppy-disk mr-1.5"></i> Simpan Perubahan Kredensial
+                                </button>
+                            </form>
                         </div>
 
-                        <div class="border border-slate-200 rounded-xl overflow-hidden">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
-                                    <tr>
-                                        <th class="p-3">Nama Divisi / Unit</th>
-                                        <th class="p-3 text-center">Jumlah SPJ</th>
-                                        <th class="p-3">Total Serapan Dana</th>
-                                        <th class="p-3 text-center">Persentase</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="rekapTableBody" class="divide-y divide-slate-200">
-                                    <!-- Injected JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- SECTION 5: PENGATURAN -->
-                <section id="view-pengaturan" class="tab-content hidden space-y-6">
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 max-w-2xl">
-                        <h3 class="text-base font-bold text-slate-800 mb-4">Pengaturan Sistem E-SPJ</h3>
-                        
-                        <div class="space-y-4 text-xs">
-                            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                                <span class="font-bold block text-slate-700 mb-1">Reset Data Simulasi</span>
-                                <p class="text-slate-500 mb-2">Kembalikan data tabel SPJ ke sampel awal (default dataset demo).</p>
+                        <!-- System Configuration -->
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+                            <h3 class="text-base font-bold text-slate-800 border-b pb-3"><i class="fa-solid fa-sliders text-slate-600 mr-2"></i>Pengaturan Aplikasi</h3>
+                            
+                            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+                                <span class="font-bold text-slate-700 block mb-1">Reset Data Simulasi</span>
+                                <p class="text-slate-500 mb-3">Kembalikan seluruh daftar SPJ ke data sampel awal.</p>
                                 <button onclick="resetDemoData()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded font-medium transition-all">
-                                    <i class="fa-solid fa-arrows-rotate mr-1"></i> Reset Data Demo
+                                    <i class="fa-solid fa-rotate-left mr-1"></i> Reset Data SPJ
                                 </button>
                             </div>
 
-                            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                                <span class="font-bold block text-slate-700 mb-1">Informasi Aplikasi Hosting</span>
-                                <p class="text-slate-500">Aplikasi ini berjalan secara Client-Side Vanilla JS dan siap untuk dihosting gratis menggunakan <b>GitHub Pages</b>.</p>
+                            <div class="p-3 bg-blue-50 rounded-lg border border-blue-200 text-xs text-blue-900">
+                                <span class="font-bold block mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Hosting GitHub Pages</span>
+                                <p class="leading-relaxed">Aplikasi bersifat client-side full interface, aman di-deploy secara langsung tanpa server-backend tambahan.</p>
                             </div>
                         </div>
                     </div>
@@ -616,8 +605,8 @@
                     </div>
 
                     <div class="border border-slate-200 p-3 rounded-lg">
-                        <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Berkas Lampiran Ada</span>
-                        <div class="flex flex-wrap gap-1" id="modalAttachmentsList">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Berkas Lampiran & File Nota</span>
+                        <div class="flex flex-wrap gap-1.5" id="modalAttachmentsList">
                             <!-- Injected JS -->
                         </div>
                     </div>
@@ -645,6 +634,9 @@
                 </div>
 
                 <div class="flex items-center space-x-2">
+                    <button onclick="exportToPDF()" class="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg flex items-center shadow-sm transition-all">
+                        <i class="fa-solid fa-file-pdf mr-1.5"></i> Download PDF
+                    </button>
                     <button onclick="window.print()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg flex items-center shadow-sm">
                         <i class="fa-solid fa-print mr-1.5"></i> Cetak Dokumen SPJ
                     </button>
@@ -653,9 +645,17 @@
         </div>
     </div>
 
-
     <!-- JAVASCRIPT LOGIC -->
     <script>
+        // ACCOUNT CREDENTIALS STATE
+        let appAccount = JSON.parse(localStorage.getItem('espj_account')) || {
+            username: 'admin',
+            password: 'admin123'
+        };
+
+        // NOTA UPLOADED FILES ARRAY (TEMPORARY FOR FORM)
+        let tempNotaFiles = [];
+
         // DATA INITIAL STATE & SAMPLE DEMO
         const initialSpjData = [
             {
@@ -670,7 +670,10 @@
                     { desc: 'Hand Sanitizer 5L', vol: 4, harga: 150000 }
                 ],
                 total: 950000,
-                lampiran: ['Kwitansi', 'Nota', 'BAST']
+                lampiranFiles: [
+                    { name: 'Kwitansi_Resmi.pdf', size: '245 KB', type: 'application/pdf' },
+                    { name: 'Faktur_Toko_Kesehatan.png', size: '1.2 MB', type: 'image/png' }
+                ]
             },
             {
                 id: 'SPJ/2026/002',
@@ -684,21 +687,9 @@
                     { desc: 'SSL Wildcard Certificate', vol: 1, harga: 1200000 }
                 ],
                 total: 5700000,
-                lampiran: ['Kwitansi', 'Nota Dinas']
-            },
-            {
-                id: 'SPJ/2026/003',
-                kegiatan: 'Rapat Koordinasi Penyusunan Anggaran Tahunan',
-                unit: 'Keuangan',
-                tanggal: '2026-02-22',
-                pptk: 'Siti Rahma, SE',
-                status: 'Disetujui',
-                items: [
-                    { desc: 'Konsumsi Rapat / Snack (30 porsi)', vol: 30, harga: 25000 },
-                    { desc: 'Sewa Ruang Rapat & Projector', vol: 1, harga: 750000 }
-                ],
-                total: 1500000,
-                lampiran: ['Kwitansi', 'Nota', 'BAST', 'Nota Dinas']
+                lampiranFiles: [
+                    { name: 'Nota_Invoice_Cloud.pdf', size: '512 KB', type: 'application/pdf' }
+                ]
             }
         ];
 
@@ -709,6 +700,8 @@
 
         // ON INITIAL LOAD
         window.onload = function() {
+            updateAccountHintDisplay();
+
             // Check login status
             const currentUser = localStorage.getItem('espj_user');
             if(!currentUser) {
@@ -719,21 +712,22 @@
                 document.getElementById('userAvatar').innerText = currentUser.charAt(0).toUpperCase();
             }
 
-            // Initialize default items in input form
             addItemRow();
             addItemRow();
-            
-            // Set current date in form
             document.getElementById('inputTanggal').valueAsDate = new Date();
-
-            // Render views
             renderAll();
         };
 
-        // LOGIN SYSTEM
+        function updateAccountHintDisplay() {
+            document.getElementById('hintUser').innerText = appAccount.username;
+            document.getElementById('hintPass').innerText = appAccount.password;
+            document.getElementById('newUsername').value = appAccount.username;
+        }
+
+        // LOGIN & PROFILE MANAGEMENT
         function fillQuickLogin() {
-            document.getElementById('usernameInput').value = 'admin';
-            document.getElementById('passwordInput').value = 'admin123';
+            document.getElementById('usernameInput').value = appAccount.username;
+            document.getElementById('passwordInput').value = appAccount.password;
         }
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -741,85 +735,194 @@
             const u = document.getElementById('usernameInput').value;
             const p = document.getElementById('passwordInput').value;
 
-            if((u === 'admin' && p === 'admin123') || (u === 'admin' && p === 'spj2026')) {
+            if(u === appAccount.username && p === appAccount.password) {
                 localStorage.setItem('espj_user', u);
                 document.getElementById('loginModal').classList.add('hidden');
                 document.getElementById('userNameDisplay').innerText = u;
                 document.getElementById('userAvatar').innerText = u.charAt(0).toUpperCase();
+                document.getElementById('loginError').classList.add('hidden');
             } else {
                 document.getElementById('loginError').classList.remove('hidden');
             }
         });
 
-        function logout() {
-            if(confirm('Apakah Anda yakin ingin keluar dari aplikasi?')) {
-                localStorage.removeItem('espj_user');
-                location.reload();
+        function handleProfileUpdate(e) {
+            e.preventDefault();
+            const newU = document.getElementById('newUsername').value.trim();
+            const oldP = document.getElementById('oldPassword').value;
+            const newP = document.getElementById('newPassword').value;
+
+            if(oldP !== appAccount.password) {
+                alert('Password lama Anda salah!');
+                return;
             }
+
+            appAccount.username = newU;
+            appAccount.password = newP;
+            localStorage.setItem('espj_account', JSON.stringify(appAccount));
+            localStorage.setItem('espj_user', newU);
+
+            document.getElementById('userNameDisplay').innerText = newU;
+            document.getElementById('userAvatar').innerText = newU.charAt(0).toUpperCase();
+            updateAccountHintDisplay();
+            document.getElementById('oldPassword').value = '';
+            document.getElementById('newPassword').value = '';
+
+            alert('Username dan Password berhasil diperbarui!');
         }
 
-        // NAVIGATION TAB SYSTEM
-        function switchTab(tabId) {
-            activeTab = tabId;
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.nav-item').forEach(el => {
-                el.classList.remove('bg-blue-600', 'text-white');
-                el.classList.add('text-slate-400');
+        // UPLOAD NOTA FILES HANDLING
+        function handleNotaFilesUpload(files) {
+            Array.from(files).forEach(file => {
+                const sizeKB = (file.size / 1024).toFixed(0);
+                const formattedSize = sizeKB > 1024 ? (sizeKB / 1024).toFixed(1) + ' MB' : sizeKB + ' KB';
+                
+                tempNotaFiles.push({
+                    name: file.name,
+                    size: formattedSize,
+                    type: file.type
+                });
+            });
+            renderNotaFilesPreview();
+        }
+
+        function removeNotaFile(index) {
+            tempNotaFiles.splice(index, 1);
+            renderNotaFilesPreview();
+        }
+
+        function renderNotaFilesPreview() {
+            const container = document.getElementById('uploadedFilesPreview');
+            container.innerHTML = '';
+
+            tempNotaFiles.forEach((file, idx) => {
+                const isPdf = file.type.includes('pdf');
+                const icon = isPdf ? 'fa-file-pdf text-red-500' : 'fa-file-image text-blue-500';
+                
+                const card = document.createElement('div');
+                card.className = "flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg shadow-sm text-xs";
+                card.innerHTML = `
+                    <div class="flex items-center space-x-2 truncate">
+                        <i class="fa-solid ${icon} text-lg"></i>
+                        <div class="truncate">
+                            <p class="font-semibold text-slate-700 truncate">${file.name}</p>
+                            <span class="text-[10px] text-slate-400">${file.size}</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="removeNotaFile(${idx})" class="text-slate-400 hover:text-red-500 ml-2">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // CETAK & DOWNLOAD PDF
+        function exportToPDF() {
+            const element = document.getElementById('printableModal');
+            const opt = {
+                margin:       [0.5, 0.5, 0.5, 0.5],
+                filename:     `Dokumen_${currentDetailId || 'SPJ'}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // SUBMIT FORM OVERRIDE TO INCLUDE UPLOADED NOTA FILES
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const items = [];
+            document.querySelectorAll('#itemsContainer tr').forEach(tr => {
+                items.push({
+                    desc: tr.querySelector('.item-desc').value,
+                    vol: parseFloat(tr.querySelector('.item-vol').value) || 1,
+                    harga: parseFloat(tr.querySelector('.item-harga').value) || 0
+                });
             });
 
-            document.getElementById(`view-${tabId}`).classList.remove('hidden');
-            const activeNav = document.getElementById(`nav-${tabId}`);
-            if(activeNav) {
-                activeNav.classList.add('bg-blue-600', 'text-white');
-                activeNav.classList.remove('text-slate-400');
+            const newSpj = {
+                id: generateSpjNumber(),
+                kegiatan: document.getElementById('inputKegiatan').value,
+                unit: document.getElementById('inputUnit').value,
+                tanggal: document.getElementById('inputTanggal').value,
+                pptk: document.getElementById('inputPptk').value,
+                status: 'Verifikasi',
+                items: items,
+                total: calculateGrandTotal(),
+                lampiranFiles: [...tempNotaFiles]
+            };
+
+            spjList.unshift(newSpj);
+            renderAll();
+
+            // Reset Form & Clear Uploaded Nota
+            document.getElementById('spjForm').reset();
+            tempNotaFiles = [];
+            renderNotaFilesPreview();
+            document.getElementById('itemsContainer').innerHTML = '';
+            addItemRow();
+            addItemRow();
+
+            alert('SPJ beserta Berkas Nota berhasil disimpan!');
+            switchTab('daftar-spj');
+        }
+
+        // MODAL ATTACHMENTS VIEW
+        function openDetailModal(id) {
+            currentDetailId = id;
+            const item = spjList.find(x => x.id === id);
+            if(!item) return;
+
+            document.getElementById('modalSpjNo').innerText = item.id;
+            document.getElementById('modalKegiatan').innerText = item.kegiatan;
+            document.getElementById('modalUnit').innerText = item.unit;
+            document.getElementById('modalTanggal').innerText = item.tanggal;
+            document.getElementById('modalPptk').innerText = item.pptk;
+            document.getElementById('modalSignPptk').innerText = item.pptk;
+            document.getElementById('modalTotalAmount').innerText = formatIDR(item.total);
+
+            const badge = document.getElementById('modalStatusBadge');
+            badge.innerText = item.status;
+            badge.className = `px-2.5 py-1 rounded text-xs font-bold ${
+                item.status === 'Disetujui' ? 'bg-emerald-100 text-emerald-800' : 
+                item.status === 'Verifikasi' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'
+            }`;
+
+            // Items Table
+            const tbody = document.getElementById('modalItemsBody');
+            tbody.innerHTML = '';
+            item.items.forEach((it, idx) => {
+                const sub = it.vol * it.harga;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2 border border-slate-200 text-center">${idx + 1}</td>
+                    <td class="p-2 border border-slate-200 font-medium">${it.desc}</td>
+                    <td class="p-2 border border-slate-200 text-center">${it.vol}</td>
+                    <td class="p-2 border border-slate-200 text-right">${formatIDR(it.harga)}</td>
+                    <td class="p-2 border border-slate-200 text-right font-semibold">${formatIDR(sub)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Lampiran Files List Render
+            const attList = document.getElementById('modalAttachmentsList');
+            if(item.lampiranFiles && item.lampiranFiles.length > 0) {
+                attList.innerHTML = item.lampiranFiles.map(f => 
+                    `<a href="#" onclick="alert('Membuka file preview: ${f.name}')" class="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 px-2 py-1 rounded text-[10px] font-bold flex items-center">
+                        <i class="fa-solid fa-paperclip mr-1"></i>${f.name} (${f.size})
+                    </a>`
+                ).join('');
+            } else {
+                attList.innerHTML = '<span class="text-slate-400 text-xs">Tidak ada file nota terlampir</span>';
             }
 
-            // Update Page Header Title
-            const titles = {
-                'dashboard': 'Dashboard Overview',
-                'daftar-spj': 'Daftar Rincian File SPJ',
-                'tambah-spj': 'Input Berkas SPJ Baru',
-                'rekapitulasi': 'Rekapitulasi Realisasi Anggaran',
-                'pengaturan': 'Pengaturan Sistem'
-            };
-            document.getElementById('pageTitle').innerText = titles[tabId] || 'E-SPJ Keuangan';
-
-            renderAll();
+            document.getElementById('detailModal').classList.remove('hidden');
         }
 
-        // CURRENCY FORMATTER HELPER
-        function formatIDR(number) {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
-        }
-
-        // RENDER EVERYTHING
-        function renderAll() {
-            saveToLocalStorage();
-            renderStats();
-            renderMainTable(spjList);
-            renderRecentTable();
-            renderRekapitulasi();
-            generateSpjNumber();
-        }
-
-        function saveToLocalStorage() {
-            localStorage.setItem('espj_data', JSON.stringify(spjList));
-        }
-
-        // STATS CALCULATIONS
-        function renderStats() {
-            const totalSPJ = spjList.length;
-            const totalAnggaran = spjList.reduce((acc, curr) => acc + (curr.status === 'Disetujui' ? curr.total : 0), 0);
-            const countApproved = spjList.filter(x => x.status === 'Disetujui').length;
-            const countPending = spjList.filter(x => x.status === 'Verifikasi' || x.status === 'Draft').length;
-
-            document.getElementById('statTotalSPJ').innerText = totalSPJ;
-            document.getElementById('statTotalAnggaran').innerText = formatIDR(totalAnggaran);
-            document.getElementById('statApproved').innerText = countApproved;
-            document.getElementById('statPending').innerText = countPending;
-        }
-
-        // MAIN TABLE RENDER
+        // Table Render Update for Lampiran Files
         function renderMainTable(data) {
             const tbody = document.getElementById('mainSpjTableBody');
             const emptyNotice = document.getElementById('emptyTableNotice');
@@ -842,9 +945,10 @@
                 else if(item.status === 'Ditolak') statusBadge = '<span class="px-2 py-1 bg-red-100 text-red-700 font-bold rounded-full text-[10px]"><i class="fa-solid fa-xmark mr-1"></i>Ditolak</span>';
                 else statusBadge = '<span class="px-2 py-1 bg-slate-100 text-slate-700 font-bold rounded-full text-[10px]">Draft</span>';
 
-                let lampiranBadges = item.lampiran && item.lampiran.length > 0 
-                    ? item.lampiran.map(l => `<span class="bg-blue-50 text-blue-600 border border-blue-200 px-1.5 py-0.5 rounded text-[9px] mr-1">${l}</span>`).join('')
-                    : '<span class="text-slate-400 text-[10px]">Tidak Ada</span>';
+                const fileCount = item.lampiranFiles ? item.lampiranFiles.length : 0;
+                let fileBadge = fileCount > 0 
+                    ? `<span class="bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fa-solid fa-paperclip mr-1"></i>${fileCount} File Nota</span>`
+                    : '<span class="text-slate-400 text-[10px]">Tanpa File</span>';
 
                 tr.innerHTML = `
                     <td class="p-3.5">
@@ -857,7 +961,7 @@
                     </td>
                     <td class="p-3.5 font-medium text-slate-600">${item.unit}</td>
                     <td class="p-3.5 font-bold text-blue-700">${formatIDR(item.total)}</td>
-                    <td class="p-3.5">${lampiranBadges}</td>
+                    <td class="p-3.5">${fileBadge}</td>
                     <td class="p-3.5 text-center">${statusBadge}</td>
                     <td class="p-3.5 text-center">
                         <div class="flex items-center justify-center space-x-1">
