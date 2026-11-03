@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Informasi Pengelolaan SPJ Keuangan</title>
-    <!-- Tailwind CSS -->
+    <title>Sistem Informasi Pengelolaan SPJ Keuangan dan BKU v4.0 Enterprise</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- html2pdf.js for direct PDF download -->
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- html2pdf.js untuk Direct PDF Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <script>
@@ -36,7 +36,6 @@
         }
     </script>
     <style>
-        /* Custom scrollbar for desktop app feel */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -52,17 +51,23 @@
             background: #94a3b8;
         }
         .glass-header {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(10px);
+        }
+        .tree-toggle-icon {
+            transition: transform 0.2s ease-in-out;
+        }
+        .tree-toggle-icon.open {
+            transform: rotate(90deg);
         }
         @media print {
             body * {
                 visibility: hidden;
             }
-            #printableModal, #printableModal * {
+            #printableModal, #printableModal *, #printableBKUModal, #printableBKUModal * {
                 visibility: visible;
             }
-            #printableModal {
+            #printableModal, #printableBKUModal {
                 position: absolute;
                 left: 0;
                 top: 0;
@@ -76,33 +81,46 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased h-screen overflow-hidden flex flex-col">
 
-    <!-- LOGIN SCREEN MODAL -->
-    <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 transform transition-all">
-            <div class="bg-gradient-to-r from-blue-700 to-indigo-800 p-6 text-white text-center relative">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 mb-3 backdrop-blur-md">
-                    <i class="fa-solid me-0 fa-file-invoice-dollar text-3xl text-blue-200"></i>
+    <!-- LOGIN MODAL WITH QUICK ACCOUNT SELECTOR (3 USERS) -->
+    <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 transform transition-all m-4">
+            <div class="bg-gradient-to-r from-blue-800 via-indigo-900 to-slate-900 p-6 text-white text-center relative">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 mb-3 backdrop-blur-md border border-white/20 shadow-inner">
+                    <i class="fa-solid fa-book-bookmark text-3xl text-blue-300"></i>
                 </div>
-                <h2 class="text-2xl font-bold tracking-wide">E-SPJ Keuangan</h2>
-                <p class="text-blue-100 text-xs mt-1">Sistem Pertanggungjawaban Anggaran Digital</p>
+                <h2 class="text-2xl font-extrabold tracking-wide">E-SPJ dan BKU v4.0</h2>
+                <p class="text-blue-200 text-xs mt-1">Sistem Pertanggungjawaban SPJ, Kode Rekening dan Buku Kas Umum</p>
             </div>
             
             <form id="loginForm" class="p-6 space-y-4">
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 flex items-start justify-between">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1 flex items-center justify-between">
+                        <span>Pilih Akun Login (3 Profile User)</span>
+                        <span class="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 font-bold">Enterprise Demo</span>
+                    </label>
+                    <select id="quickUserSelect" onchange="applyQuickUserSelection()" class="w-full text-xs font-semibold p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="admin">1. Super Admin / Bendahara Pengeluaran (Full Access)</option>
+                        <option value="pptk_kegiatan">2. PPTK Kegiatan (Inputer SPJ dan BKU)</option>
+                        <option value="verifikator">3. Verifikator Keuangan / Auditor (Reviewer)</option>
+                    </select>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900 flex items-start justify-between">
                     <div>
-                        <span class="font-semibold block mb-0.5"><i class="fa-solid fa-circle-info mr-1"></i> Akun Login:</span>
-                        <span id="loginHintText">Username: <code class="font-mono font-bold bg-blue-100 px-1 py-0.5 rounded" id="hintUser">admin</code> | Pass: <code class="font-mono font-bold bg-blue-100 px-1 py-0.5 rounded" id="hintPass">admin123</code></span>
+                        <span class="font-bold block mb-1 text-blue-950"><i class="fa-solid fa-user-shield mr-1 text-blue-600"></i> Credential Akun Terpilih:</span>
+                        <p class="text-[11px]"><span class="font-semibold">Username:</span> <code class="font-mono font-bold bg-blue-100 px-1.5 py-0.5 rounded text-blue-800" id="hintUser">admin</code></p>
+                        <p class="text-[11px] mt-0.5"><span class="font-semibold">Password:</span> <code class="font-mono font-bold bg-blue-100 px-1.5 py-0.5 rounded text-blue-800" id="hintPass">admin123</code></p>
+                        <p class="text-[10px] text-slate-500 mt-1 italic" id="hintRoleDesc">Akses penuh pengelolaan SPJ, Modul BKU, Kode Rekening dan Verifikasi.</p>
                     </div>
-                    <button type="button" onclick="fillQuickLogin()" class="text-blue-600 hover:text-blue-800 font-medium underline text-xs whitespace-nowrap ml-2">Isi Otomatis</button>
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Username</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                            <i class="fa-solid fa-user text-sm"></i>
+                            <i class="fa-solid fa-user text-xs"></i>
                         </span>
-                        <input type="text" id="usernameInput" required placeholder="Masukkan username" class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <input type="text" id="usernameInput" required placeholder="Masukkan username" class="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
 
@@ -110,74 +128,159 @@
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                            <i class="fa-solid fa-lock text-sm"></i>
+                            <i class="fa-solid fa-lock text-xs"></i>
                         </span>
-                        <input type="password" id="passwordInput" required placeholder="••••••••" class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <input type="password" id="passwordInput" required placeholder="••••••••" class="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
 
-                <div id="loginError" class="hidden text-red-600 text-xs font-medium text-center bg-red-50 p-2 rounded border border-red-200">
+                <div id="loginError" class="hidden text-red-600 text-xs font-medium text-center bg-red-50 p-2.5 rounded-lg border border-red-200">
                     Username atau password salah!
                 </div>
 
-                <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center">
-                    <i class="fa-solid fa-right-to-bracket mr-2"></i> Masuk Aplikasi
+                <button type="submit" class="w-full py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-lg text-xs shadow-md transition-all flex items-center justify-center">
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i> Masuk Ke Aplikasi
                 </button>
                 
-                <p class="text-center text-xs text-slate-400 pt-2">© 2026 E-SPJ System v2.4 • Portal Internal Keuangan</p>
+                <p class="text-center text-[10px] text-slate-400 pt-1">© 2026 E-SPJ Keuangan System v4.0 Enterprise Edition</p>
             </form>
         </div>
     </div>
 
-    <!-- MAIN DESKTOP APP LAYOUT -->
+    <!-- MAIN APP WRAPPER -->
     <div class="flex h-screen overflow-hidden">
 
-        <!-- SIDEBAR NAV -->
-        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 shadow-xl border-r border-slate-800">
+        <!-- SIDEBAR WITH INTERACTIVE HIERARCHICAL TREE VIEW NAVIGATION -->
+        <aside class="w-72 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 shadow-xl border-r border-slate-800">
             <!-- Brand -->
-            <div class="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-950/50">
-                <i class="fa-solid fa-file-invoice-dollar text-blue-500 text-2xl mr-3"></i>
-                <div>
-                    <h1 class="text-base font-bold text-white tracking-wide leading-tight">E-SPJ DESKTOP</h1>
-                    <span class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Keuangan & Anggaran</span>
+            <div class="h-16 flex items-center justify-between px-5 border-b border-slate-800 bg-slate-950/70">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-sm font-extrabold text-white tracking-wide leading-tight">E-SPJ dan BKU v4.0</h1>
+                        <span class="text-[10px] text-blue-400 font-semibold tracking-wider">ENTERPRISE SYSTEM</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Navigation Links -->
-            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-                <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white shadow-sm transition-all">
-                    <i class="fa-solid fa-chart-line w-6 text-center text-base mr-2"></i> Dashboard Overview
-                </a>
-                <a href="#" onclick="switchTab('daftar-spj')" id="nav-daftar-spj" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
-                    <i class="fa-solid fa-folder-open w-6 text-center text-base mr-2"></i> Daftar File SPJ
-                </a>
-                <a href="#" onclick="switchTab('tambah-spj')" id="nav-tambah-spj" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
-                    <i class="fa-solid fa-circle-plus w-6 text-center text-base mr-2"></i> Input SPJ Baru
-                </a>
-                <a href="#" onclick="switchTab('rekapitulasi')" id="nav-rekapitulasi" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
-                    <i class="fa-solid fa-calculator w-6 text-center text-base mr-2"></i> Rekapitulasi & Laporan
-                </a>
-                <a href="#" onclick="switchTab('profil-pengaturan')" id="nav-profil-pengaturan" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
-                    <i class="fa-solid fa-user-gear w-6 text-center text-base mr-2"></i> Pengaturan Akun & Profil
-                </a>
-            </nav>
+            <!-- MULTI-LEVEL TREE VIEW NAVIGATION -->
+            <nav class="flex-1 px-3 py-4 space-y-2 overflow-y-auto text-xs">
+                
+                <!-- TREE FOLDER 1: DASHBOARD & OVERVIEW -->
+                <div>
+                    <button onclick="toggleTree('tree-dashboard', 'icon-dashboard')" class="w-full flex items-center justify-between px-2.5 py-2 text-slate-400 hover:text-white hover:bg-slate-800/60 rounded-lg transition-all font-bold">
+                        <span class="flex items-center"><i class="fa-solid fa-folder text-amber-400 mr-2"></i> DASHBOARD dan UTAMA</span>
+                        <i id="icon-dashboard" class="fa-solid fa-chevron-right text-[10px] tree-toggle-icon open"></i>
+                    </button>
+                    <div id="tree-dashboard" class="pl-4 mt-1 space-y-1">
+                        <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item flex items-center px-3 py-2 font-medium rounded-lg bg-blue-600 text-white shadow-sm">
+                            <i class="fa-solid fa-chart-pie mr-2.5"></i> Ringkasan Executive
+                        </a>
+                        <a href="#" onclick="switchTab('activity-log')" id="nav-activity-log" class="nav-item flex items-center px-3 py-2 font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg">
+                            <i class="fa-solid fa-clock-rotate-left mr-2.5"></i> Activity and Audit Log
+                        </a>
+                    </div>
+                </div>
 
-            <!-- User Info Footer -->
-            <div class="p-4 border-t border-slate-800 bg-slate-950/40">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
-                            <span id="userAvatar">A</span>
-                        </div>
-                        <div class="overflow-hidden">
-                            <p id="userNameDisplay" class="text-xs font-semibold text-white truncate">Administrator</p>
-                            <p class="text-[10px] text-emerald-400 flex items-center">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Online (Verifikator)
-                            </p>
+                <!-- TREE FOLDER 2: BUKU KAS UMUM (BKU) & KODE REKENING (NEW FITUR) -->
+                <div>
+                    <button onclick="toggleTree('tree-bku', 'icon-bku')" class="w-full flex items-center justify-between px-2.5 py-2 text-emerald-400 hover:text-white hover:bg-slate-800/60 rounded-lg transition-all font-bold">
+                        <span class="flex items-center"><i class="fa-solid fa-folder text-emerald-400 mr-2"></i> BUKU KAS UMUM (BKU)</span>
+                        <i id="icon-bku" class="fa-solid fa-chevron-right text-[10px] tree-toggle-icon open"></i>
+                    </button>
+                    <div id="tree-bku" class="pl-4 mt-1 space-y-1">
+                        <a href="#" onclick="switchTab('bku-modul')" id="nav-bku-modul" class="nav-item flex items-center px-3 py-2 font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg">
+                            <i class="fa-solid fa-book text-emerald-400 mr-2.5"></i> Transaksi Buku Kas Umum
+                        </a>
+                        <a href="#" onclick="switchTab('kode-rekening-master')" id="nav-kode-rekening-master" class="nav-item flex items-center px-3 py-2 font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg">
+                            <i class="fa-solid fa-list-ol text-blue-400 mr-2.5"></i> Master Kode Rekening
+                        </a>
+                        <a href="#" onclick="switchTab('bku-rekap-rekening')" id="nav-bku-rekap-rekening" class="nav-item flex items-center px-3 py-2 font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg">
+                            <i class="fa-solid fa-chart-column text-amber-400 mr-2.5"></i> Serapan per Rekening
+                        </a>
+                    </div>
+                </div>
+
+                <!-- TREE FOLDER 3: KELOLA SPJ & BERKAS -->
+                <div>
+                    <button onclick="toggleTree('tree-spj', 'icon-spj')" class="w-full flex items-center justify-between px-2.5 py-2 text-slate-400 hover:text-white hover:bg-slate-800/60 rounded-lg transition-all font-bold">
+                        <span class="flex items-center"><i class="fa-solid fa-folder text-amber-400 mr-2"></i> KELOLA SPJ dan NOTA</span>
+                        <i id="icon-spj" class="fa-solid fa-chevron-right text-[10px] tree-toggle-icon open"></i>
+                    </button>
+                    <div id="tree-spj" class="pl-4 mt-1 space-y-1">
+                        <a href="#" onclick="switchTab('daftar-spj')" id="nav-daftar-spj" class="nav-item flex items-center px-3 py-2 font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg">
+                            <i class="fa-solid fa-file-lines mr-2.5"></i> Semua Berkas SPJ
+                        </a>
+                        <a href="#" onclick="switchTab('tambah-spj')" id="nav-tambah-spj" class="nav-item flex items-center px-3 py-2 font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg">
+                            <i class="fa-solid fa-circle-plus mr-2.5 text-emerald-400"></i> Input SPJ Baru
+                        </a>
+
+                        <!-- SUB-TREE: FILTER UNIT/DIVISI -->
+                        <div class="pt-1">
+                            <button onclick="toggleTree('tree-unit', 'icon-unit')" class="w-full flex items-center justify-between px-2 py-1.5 text-[11px] text-slate-400 hover:text-white rounded transition-all font-semibold">
+                                <span class="flex items-center"><i class="fa-solid fa-folder-tree text-blue-400 mr-2"></i> Explorer Divisi</span>
+                                <i id="icon-unit" class="fa-solid fa-chevron-right text-[9px] tree-toggle-icon"></i>
+                            </button>
+                            <div id="tree-unit" class="pl-4 mt-0.5 space-y-1 hidden">
+                                <a href="#" onclick="filterByUnitTree('Sekretariat')" class="block py-1 px-2 text-[11px] text-slate-400 hover:text-white rounded hover:bg-slate-800"><i class="fa-solid fa-building mr-1.5 text-slate-500"></i> Sekretariat</a>
+                                <a href="#" onclick="filterByUnitTree('Keuangan')" class="block py-1 px-2 text-[11px] text-slate-400 hover:text-white rounded hover:bg-slate-800"><i class="fa-solid fa-wallet mr-1.5 text-slate-500"></i> Keuangan dan Akuntansi</a>
+                                <a href="#" onclick="filterByUnitTree('IT & Operasional')" class="block py-1 px-2 text-[11px] text-slate-400 hover:text-white rounded hover:bg-slate-800"><i class="fa-solid fa-laptop-code mr-1.5 text-slate-500"></i> IT dan Operasional</a>
+                                <a href="#" onclick="filterByUnitTree('SDM & Umum')" class="block py-1 px-2 text-[11px] text-slate-400 hover:text-white rounded hover:bg-slate-800"><i class="fa-solid fa-users mr-1.5 text-slate-500"></i> SDM dan Umum</a>
+                            </div>
                         </div>
                     </div>
-                    <button onclick="logout()" title="Logout" class="text-slate-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors">
-                        <i class="fa-solid fa-right-from-bracket"></i>
+                </div>
+
+                <!-- TREE FOLDER 4: REKAPITULASI & LAPORAN -->
+                <div>
+                    <button onclick="toggleTree('tree-rekap', 'icon-rekap')" class="w-full flex items-center justify-between px-2.5 py-2 text-slate-400 hover:text-white hover:bg-slate-800/60 rounded-lg transition-all font-bold">
+                        <span class="flex items-center"><i class="fa-solid fa-folder text-amber-400 mr-2"></i> REKAP dan LAPORAN</span>
+                        <i id="icon-rekap" class="fa-solid fa-chevron-right text-[10px] tree-toggle-icon open"></i>
+                    </button>
+                    <div id="tree-rekap" class="pl-4 mt-1 space-y-1">
+                        <a href="#" onclick="switchTab('rekapitulasi')" id="nav-rekapitulasi" class="nav-item flex items-center px-3 py-2 font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg">
+                            <i class="fa-solid fa-calculator mr-2.5"></i> Rekapitulasi Divisi
+                        </a>
+                        <a href="#" onclick="switchTab('laporan-realisasi')" id="nav-laporan-realisasi" class="nav-item flex items-center px-3 py-2 font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg">
+                            <i class="fa-solid fa-chart-line mr-2.5"></i> Realisasi Jenis Belanja
+                        </a>
+                    </div>
+                </div>
+
+                <!-- TREE FOLDER 5: PENGATURAN AKUN & SISTEM -->
+                <div>
+                    <button onclick="toggleTree('tree-setting', 'icon-setting')" class="w-full flex items-center justify-between px-2.5 py-2 text-slate-400 hover:text-white hover:bg-slate-800/60 rounded-lg transition-all font-bold">
+                        <span class="flex items-center"><i class="fa-solid fa-folder text-amber-400 mr-2"></i> AKUN dan SISTEM</span>
+                        <i id="icon-setting" class="fa-solid fa-chevron-right text-[10px] tree-toggle-icon open"></i>
+                    </button>
+                    <div id="tree-setting" class="pl-4 mt-1 space-y-1">
+                        <a href="#" onclick="switchTab('kelola-akun')" id="nav-kelola-akun" class="nav-item flex items-center px-3 py-2 font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg">
+                            <i class="fa-solid fa-users-gear mr-2.5"></i> Kelola 3 Akun Profile
+                        </a>
+                        <a href="#" onclick="switchTab('pengaturan-sistem')" id="nav-pengaturan-sistem" class="nav-item flex items-center px-3 py-2 font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg">
+                            <i class="fa-solid fa-sliders mr-2.5"></i> Pengaturan dan Reset
+                        </a>
+                    </div>
+                </div>
+
+            </nav>
+
+            <!-- CURRENT ACTIVE USER FOOTER -->
+            <div class="p-3.5 border-t border-slate-800 bg-slate-950/80">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2.5 overflow-hidden">
+                        <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow" id="userAvatar">
+                            A
+                        </div>
+                        <div class="overflow-hidden">
+                            <p id="sidebarUserName" class="text-xs font-bold text-white truncate">Administrator</p>
+                            <span id="sidebarUserRole" class="text-[9px] px-1.5 py-0.2 rounded bg-blue-900/80 text-blue-300 font-bold border border-blue-700 inline-block truncate">Super Admin</span>
+                        </div>
+                    </div>
+                    <button onclick="logout()" title="Logout / Ganti User" class="text-slate-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors">
+                        <i class="fa-solid fa-right-from-bracket text-sm"></i>
                     </button>
                 </div>
             </div>
@@ -186,38 +289,205 @@
         <!-- MAIN CONTENT AREA -->
         <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50">
             
-            <!-- TOP HEADER -->
+            <!-- TOP HEADER TOOLBAR -->
             <header class="h-16 glass-header border-b border-slate-200 flex items-center justify-between px-6 z-10">
                 <div class="flex items-center space-x-4">
-                    <h2 id="pageTitle" class="text-lg font-bold text-slate-800">Dashboard Utama</h2>
-                    <span class="text-xs px-2.5 py-1 bg-slate-200 text-slate-600 rounded-full font-medium">TA 2026</span>
+                    <h2 id="pageTitle" class="text-base font-extrabold text-slate-800">Buku Kas Umum (BKU)</h2>
+                    <span class="text-[11px] px-2.5 py-1 bg-slate-200 text-slate-700 rounded-full font-bold">TA 2026</span>
+                    <!-- Active Role Badge Top Header -->
+                    <span id="topRoleBadge" class="text-[10px] px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded font-bold border border-blue-200">
+                        Role: Super Admin
+                    </span>
                 </div>
 
-                <!-- Global Search & Actions -->
+                <!-- Global Actions -->
                 <div class="flex items-center space-x-3">
-                    <div class="relative w-64">
-                        <input type="text" id="globalSearch" onkeyup="filterGlobalData()" placeholder="Cari No SPJ / Kegiatan..." class="w-full text-xs pl-8 pr-3 py-2 bg-slate-100 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="relative w-60">
+                        <input type="text" id="globalSearch" onkeyup="filterGlobalData()" placeholder="Cari SPJ, BKU, Kode Rekening..." class="w-full text-xs pl-8 pr-3 py-2 bg-slate-100 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
                     </div>
 
-                    <button onclick="quickExportData()" class="px-3 py-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold flex items-center shadow-sm transition-all">
+                    <button onclick="quickExportCSV()" class="px-3 py-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold flex items-center shadow-sm transition-all">
                         <i class="fa-solid fa-file-excel mr-1.5"></i> Export CSV
                     </button>
                 </div>
             </header>
 
-            <!-- CONTAINER VIEWS -->
+            <!-- DYNAMIC VIEWS CONTAINER -->
             <div class="flex-1 overflow-y-auto p-6 space-y-6">
 
-                <!-- SECTION 1: DASHBOARD OVERVIEW -->
-                <section id="view-dashboard" class="tab-content space-y-6">
-                    <!-- Stat Cards -->
+                <!-- 1. MODUL BUKU KAS UMUM (BKU) VIEW (NEW FEATURE) -->
+                <section id="view-bku-modul" class="tab-content space-y-6">
+                    
+                    <!-- BKU Summary Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Total Penerimaan (Debet)</p>
+                                <h3 id="bkuStatPenerimaan" class="text-xl font-extrabold text-emerald-600 mt-1">Rp 0</h3>
+                                <p class="text-[10px] text-slate-400 mt-1">Penerimaan APBD / Kas</p>
+                            </div>
+                            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-circle-arrow-down"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Total Pengeluaran (Kredit)</p>
+                                <h3 id="bkuStatPengeluaran" class="text-xl font-extrabold text-red-600 mt-1">Rp 0</h3>
+                                <p class="text-[10px] text-slate-400 mt-1">Realisasi SPJ Belanja</p>
+                            </div>
+                            <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-circle-arrow-up"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Saldo Kas Akhir BKU</p>
+                                <h3 id="bkuStatSaldoAkhir" class="text-xl font-extrabold text-blue-700 mt-1">Rp 0</h3>
+                                <p class="text-[10px] text-blue-600 font-medium mt-1"><i class="fa-solid fa-scale-balanced"></i> Running Balance Active</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-vault"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BKU Toolbar & Filter Bar -->
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Filter Bulan BKU</label>
+                                <select id="filterBkuBulan" onchange="renderBkuTable()" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500">
+                                    <option value="ALL">Semua Bulan</option>
+                                    <option value="01">Januari</option>
+                                    <option value="02">Februari</option>
+                                    <option value="03">Maret</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Filter Kode Rekening</label>
+                                <select id="filterBkuRekening" onchange="renderBkuTable()" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 max-w-xs">
+                                    <option value="ALL">Semua Kode Rekening</option>
+                                    <!-- Injected JS -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <button onclick="openBkuModalForm()" class="px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition-all flex items-center">
+                                <i class="fa-solid fa-plus-circle mr-1.5"></i> Input Transaksi BKU
+                            </button>
+                            <button onclick="openPrintableBKUModal()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-bold transition-all flex items-center">
+                                <i class="fa-solid fa-print mr-1.5"></i> Cetak BKU Resmi
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BKU Main Transaction Table -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                            <h3 class="font-extrabold text-xs text-slate-800 uppercase tracking-wide">
+                                <i class="fa-solid fa-book-open text-emerald-600 mr-2"></i> Lembar Buku Kas Umum (BKU) - Tahun 2026
+                            </h3>
+                            <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded border border-emerald-200">
+                                Realtime Accumulated Balance
+                            </span>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 text-slate-700 uppercase text-[10px] font-extrabold border-b border-slate-200">
+                                    <tr>
+                                        <th class="p-3 w-12 text-center">No</th>
+                                        <th class="p-3 w-28">Tanggal</th>
+                                        <th class="p-3 w-32">No. Bukti / SPJ</th>
+                                        <th class="p-3 w-36">Kode Rekening</th>
+                                        <th class="p-3">Uraian Transaksi BKU</th>
+                                        <th class="p-3 text-right text-emerald-700">Penerimaan (Rp)</th>
+                                        <th class="p-3 text-right text-red-700">Pengeluaran (Rp)</th>
+                                        <th class="p-3 text-right text-blue-800">Saldo (Rp)</th>
+                                        <th class="p-3 text-center w-16">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bkuTableBody" class="divide-y divide-slate-200">
+                                    <!-- Injected JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. MASTER KODE REKENING VIEW (NEW FEATURE) -->
+                <section id="view-kode-rekening-master" class="tab-content hidden space-y-6 max-w-5xl">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <div class="flex justify-between items-center mb-5 border-b pb-4">
+                            <div>
+                                <h3 class="text-base font-bold text-slate-800">Master Kode Rekening Keuangan</h3>
+                                <p class="text-xs text-slate-500">Standar Klasifikasi Belanja dan Pagu Anggaran Daerah / Instansi.</p>
+                            </div>
+                            <button onclick="openModalTambahKodeRekening()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all">
+                                <i class="fa-solid fa-plus mr-1.5"></i> Tambah Kode Rekening
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 uppercase text-[10px] font-bold text-slate-700 border-b">
+                                    <tr>
+                                        <th class="p-3">Kode Rekening</th>
+                                        <th class="p-3">Nama Uraian Rekening</th>
+                                        <th class="p-3">Kategori Jenis</th>
+                                        <th class="p-3 text-right">Pagu Anggaran (Rp)</th>
+                                        <th class="p-3 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="masterRekeningTableBody" class="divide-y divide-slate-200">
+                                    <!-- Injected JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. SERAPAN PER KODE REKENING VIEW (NEW FEATURE) -->
+                <section id="view-bku-rekap-rekening" class="tab-content hidden space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <h3 class="text-base font-bold text-slate-800 mb-2">Laporan Serapan Anggaran per Kode Rekening</h3>
+                        <p class="text-xs text-slate-500 mb-5">Perhitungan realisasi BKU terhadap Pagu Anggaran masing-masing rekening.</p>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 uppercase text-[10px] font-bold text-slate-700 border-b">
+                                    <tr>
+                                        <th class="p-3">Kode Rekening</th>
+                                        <th class="p-3">Uraian Rekening</th>
+                                        <th class="p-3 text-right">Pagu Anggaran</th>
+                                        <th class="p-3 text-right text-red-700">Realisasi (BKU)</th>
+                                        <th class="p-3 text-right text-emerald-700">Sisa Pagu</th>
+                                        <th class="p-3 text-center">% Serapan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="serapanRekeningTableBody" class="divide-y divide-slate-200">
+                                    <!-- Injected JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. DASHBOARD VIEW -->
+                <section id="view-dashboard" class="tab-content hidden space-y-6">
+                    <!-- Metric Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                             <div>
-                                <p class="text-xs text-slate-500 font-semibold uppercase">Total Berkas SPJ</p>
+                                <p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Total Berkas SPJ</p>
                                 <h3 id="statTotalSPJ" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
-                                <p class="text-[11px] text-slate-400 mt-1"><span class="text-emerald-600 font-bold"><i class="fa-solid fa-arrow-up"></i> +12%</span> dari bulan lalu</p>
+                                <p class="text-[10px] text-slate-400 mt-1"><span class="text-emerald-600 font-bold"><i class="fa-solid fa-arrow-up"></i> +12%</span> aktif TA 2026</p>
                             </div>
                             <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
                                 <i class="fa-solid fa-folder-closed"></i>
@@ -226,9 +496,9 @@
 
                         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                             <div>
-                                <p class="text-xs text-slate-500 font-semibold uppercase">Total Realisasi Anggaran</p>
-                                <h3 id="statTotalAnggaran" class="text-xl font-bold text-slate-800 mt-1">Rp 0</h3>
-                                <p class="text-[11px] text-slate-400 mt-1">Sesuai SPJ Terverifikasi</p>
+                                <p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Total Realisasi SPJ</p>
+                                <h3 id="statTotalAnggaran" class="text-lg font-bold text-slate-800 mt-1">Rp 0</h3>
+                                <p class="text-[10px] text-slate-400 mt-1">Sesuai SPJ Disetujui</p>
                             </div>
                             <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
                                 <i class="fa-solid fa-wallet"></i>
@@ -237,80 +507,80 @@
 
                         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                             <div>
-                                <p class="text-xs text-slate-500 font-semibold uppercase">SPJ Disetujui</p>
+                                <p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider">SPJ Disetujui</p>
                                 <h3 id="statApproved" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
-                                <p class="text-[11px] text-emerald-600 font-medium mt-1"><i class="fa-solid fa-check-circle"></i> Selesai & Lunas</p>
+                                <p class="text-[10px] text-emerald-600 font-medium mt-1"><i class="fa-solid fa-circle-check"></i> Verifikasi Lunas</p>
                             </div>
                             <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
-                                <i class="fa-solid fa-circle-check"></i>
+                                <i class="fa-solid fa-check-double"></i>
                             </div>
                         </div>
 
                         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                             <div>
-                                <p class="text-xs text-slate-500 font-semibold uppercase">Pending Verifikasi</p>
+                                <p class="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Pending Review</p>
                                 <h3 id="statPending" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
-                                <p class="text-[11px] text-amber-600 font-medium mt-1"><i class="fa-solid fa-clock"></i> Membutuhkan Review</p>
+                                <p class="text-[10px] text-amber-600 font-medium mt-1"><i class="fa-solid fa-hourglass-half"></i> Perlu Verifikasi</p>
                             </div>
                             <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
-                                <i class="fa-solid fa-hourglass-half"></i>
+                                <i class="fa-solid fa-clock"></i>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Recent Activities & Quick Table -->
+                    <!-- Dashboard Table & BKU Quick Info -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Table Mini -->
                         <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
                             <div class="flex items-center justify-between mb-4">
-                                <h3 class="font-bold text-slate-800 text-sm">SPJ Terakhir Diajukan</h3>
+                                <h3 class="font-bold text-slate-800 text-sm">Pengajuan SPJ Terakhir</h3>
                                 <button onclick="switchTab('daftar-spj')" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">Lihat Semua →</button>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-xs text-slate-600">
-                                    <thead class="bg-slate-50 text-slate-700 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                    <thead class="bg-slate-50 text-slate-700 uppercase text-[10px] font-bold border-b border-slate-200">
                                         <tr>
                                             <th class="p-2.5">No SPJ</th>
                                             <th class="p-2.5">Nama Kegiatan</th>
-                                            <th class="p-2.5">Nominal</th>
+                                            <th class="p-2.5">Jenis Belanja</th>
+                                            <th class="p-2.5">Nominal Netto</th>
                                             <th class="p-2.5">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody id="recentTableBody" class="divide-y divide-slate-100">
-                                        <!-- Dynamic mini rows -->
+                                        <!-- Injected via JS -->
                                     </tbody>
                                 </table>
                             </div>
                         </div>
 
-                        <!-- Info Card / Guidance -->
                         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between">
                             <div>
-                                <h3 class="font-bold text-slate-800 text-sm mb-3"><i class="fa-solid fa-list-check text-blue-600 mr-2"></i>Kelengkapan Dokumen SPJ</h3>
-                                <p class="text-xs text-slate-600 leading-relaxed mb-4"> Setiaporang/unit wajib melengkapi 4 kelengkapan fisik file saat upload SPJ Keuangan:</p>
-                                <ul class="space-y-2 text-xs text-slate-600">
-                                    <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Nota Dinas Pembayaran</li>
-                                    <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Kwitansi Resmi Bermaterai</li>
-                                    <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Nota Belanja / Faktur Toko</li>
-                                    <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i> BAST (Berita Acara Serah Terima)</li>
-                                </ul>
+                                <h3 class="font-bold text-slate-800 text-sm mb-3"><i class="fa-solid fa-shield-halved text-blue-600 mr-2"></i>Modul BKU dan Hak Akses User</h3>
+                                <div class="space-y-2 text-xs text-slate-600">
+                                    <div class="p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                                        <span class="font-bold text-emerald-900 block"><i class="fa-solid fa-book mr-1"></i> Integrasi Buku Kas Umum</span>
+                                        <span class="text-[10px] text-emerald-700">Setiap pengajuan SPJ dapat dicatat langsung ke BKU berdasarkan Kode Rekening terkait.</span>
+                                    </div>
+                                    <div class="p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <span class="font-bold text-blue-900 block"><i class="fa-solid fa-users mr-1"></i> Multi-User Management</span>
+                                        <span class="text-[10px] text-blue-700">Tersedia 3 profil pengguna dengan hak akses input, verifikasi dan cetak BKU.</span>
+                                    </div>
+                                </div>
                             </div>
-                            <button onclick="switchTab('tambah-spj')" class="w-full mt-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow transition-all">
-                                <i class="fa-solid fa-plus mr-1"></i> Buat SPJ Baru Sekarang
+                            <button onclick="switchTab('bku-modul')" class="w-full mt-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow transition-all">
+                                <i class="fa-solid fa-book-open mr-1"></i> Buka Buku Kas Umum (BKU)
                             </button>
                         </div>
                     </div>
                 </section>
 
-                <!-- SECTION 2: DAFTAR FILE SPJ -->
+                <!-- 5. DAFTAR SPJ VIEW -->
                 <section id="view-daftar-spj" class="tab-content hidden space-y-4">
-                    <!-- Filter Toolbar -->
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
                         <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                            <!-- Filter Status -->
                             <div>
                                 <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Filter Status</label>
-                                <select id="filterStatus" onchange="applyFilters()" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <select id="filterStatus" onchange="applyFilters()" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500">
                                     <option value="ALL">Semua Status</option>
                                     <option value="Draft">Draft</option>
                                     <option value="Verifikasi">Dalam Verifikasi</option>
@@ -319,15 +589,14 @@
                                 </select>
                             </div>
 
-                            <!-- Filter Unit -->
                             <div>
                                 <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Filter Divisi/Unit</label>
-                                <select id="filterUnit" onchange="applyFilters()" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <select id="filterUnit" onchange="applyFilters()" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500">
                                     <option value="ALL">Semua Divisi</option>
                                     <option value="Sekretariat">Sekretariat</option>
-                                    <option value="Keuangan">Keuangan & Akuntansi</option>
-                                    <option value="IT & Operasional">IT & Operasional</option>
-                                    <option value="SDM & Umum">SDM & Umum</option>
+                                    <option value="Keuangan">Keuangan dan Akuntansi</option>
+                                    <option value="IT & Operasional">IT dan Operasional</option>
+                                    <option value="SDM & Umum">SDM dan Umum</option>
                                 </select>
                             </div>
                         </div>
@@ -336,83 +605,90 @@
                             <button onclick="resetFilters()" class="px-3 py-1.5 text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg font-medium transition-all">
                                 <i class="fa-solid fa-rotate-left mr-1"></i> Reset
                             </button>
-                            <button onclick="switchTab('tambah-spj')" class="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all">
+                            <button onclick="switchTab('tambah-spj')" class="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all">
                                 <i class="fa-solid fa-plus mr-1"></i> Tambah SPJ
                             </button>
                         </div>
                     </div>
 
-                    <!-- Main SPJ Table Card -->
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs text-slate-600">
-                                <thead class="bg-slate-100 text-slate-700 uppercase text-[11px] font-bold border-b border-slate-200">
+                                <thead class="bg-slate-100 text-slate-700 uppercase text-[10px] font-bold border-b border-slate-200">
                                     <tr>
-                                        <th class="p-3.5">No. SPJ & Tanggal</th>
-                                        <th class="p-3.5">Nama Kegiatan / Program</th>
-                                        <th class="p-3.5">Divisi / Unit</th>
-                                        <th class="p-3.5">Total Nominal</th>
-                                        <th class="p-3.5">Lampiran Berkas</th>
+                                        <th class="p-3.5">No. SPJ dan Tgl</th>
+                                        <th class="p-3.5">Nama Kegiatan</th>
+                                        <th class="p-3.5">Divisi dan Jenis</th>
+                                        <th class="p-3.5">Total Pengeluaran</th>
+                                        <th class="p-3.5">Total Pajak</th>
+                                        <th class="p-3.5">Lampiran File</th>
                                         <th class="p-3.5 text-center">Status</th>
                                         <th class="p-3.5 text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="mainSpjTableBody" class="divide-y divide-slate-200">
-                                    <!-- Dynamic rows from JS -->
+                                    <!-- Dynamic Rows -->
                                 </tbody>
                             </table>
                         </div>
-                        <!-- Empty State Notice -->
                         <div id="emptyTableNotice" class="hidden p-8 text-center text-slate-400">
                             <i class="fa-regular fa-folder-open text-4xl mb-2"></i>
-                            <p class="text-sm">Tidak ada data SPJ yang cocok dengan pencarian / filter.</p>
+                            <p class="text-xs">Tidak ada data SPJ yang cocok dengan kriteria pencarian.</p>
                         </div>
                     </div>
                 </section>
 
-                <!-- SECTION 3: FORM TAMBAH SPJ BARU -->
-                <section id="view-tambah-spj" class="tab-content hidden max-w-4xl mx-auto space-y-6">
+                <!-- 6. INPUT FORM SPJ VIEW (WITH KODE REKENING PER ITEM) -->
+                <section id="view-tambah-spj" class="tab-content hidden max-w-5xl mx-auto space-y-6">
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                         <div class="border-b border-slate-200 pb-4 mb-6 flex justify-between items-center">
                             <div>
-                                <h3 class="text-base font-bold text-slate-800">Formulir Input SPJ Baru</h3>
-                                <p class="text-xs text-slate-500">Lengkapi data pertanggungjawaban beserta rincian pengeluaran secara lengkap.</p>
+                                <h3 class="text-base font-bold text-slate-800">Formulir Input SPJ dan Kode Rekening</h3>
+                                <p class="text-xs text-slate-500">Isi rincian transaksi SPJ lengkap dengan pemilihan Kode Rekening belanja.</p>
                             </div>
-                            <span class="text-xs font-mono bg-blue-50 text-blue-700 px-2.5 py-1 rounded border border-blue-200 font-bold" id="generatedSpjNo">SPJ/2026/000</span>
+                            <span class="text-xs font-mono bg-blue-50 text-blue-700 px-3 py-1 rounded-lg border border-blue-200 font-bold" id="generatedSpjNo">SPJ/2026/000</span>
                         </div>
 
                         <form id="spjForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
-                            <!-- Informasi Utama -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Kegiatan / Program <span class="text-red-500">*</span></label>
+                                    <input type="text" id="inputKegiatan" required placeholder="Contoh: Pengadaan ATK & Peralatan Kantor" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Kegiatan <span class="text-red-500">*</span></label>
-                                    <input type="text" id="inputKegiatan" required placeholder="Contoh: Pengadaan Alat Tulis & Printer Office" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Belanja <span class="text-red-500">*</span></label>
+                                    <select id="inputJenisBelanja" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        <option value="Belanja Barang/Jasa">Belanja Barang/Jasa</option>
+                                        <option value="Belanja Modal">Belanja Modal</option>
+                                        <option value="Belanja Pegawai">Belanja Pegawai</option>
+                                        <option value="Belanja Perjalanan Dinas">Belanja Perjalanan Dinas</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-700 mb-1">Divisi / Unit Kerja <span class="text-red-500">*</span></label>
-                                    <select id="inputUnit" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <select id="inputUnit" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                                         <option value="">-- Pilih Divisi --</option>
                                         <option value="Sekretariat">Sekretariat</option>
-                                        <option value="Keuangan">Keuangan & Akuntansi</option>
-                                        <option value="IT & Operasional">IT & Operasional</option>
-                                        <option value="SDM & Umum">SDM & Umum</option>
+                                        <option value="Keuangan">Keuangan dan Akuntansi</option>
+                                        <option value="IT & Operasional">IT dan Operasional</option>
+                                        <option value="SDM & Umum">SDM dan Umum</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Pengajuan <span class="text-red-500">*</span></label>
-                                    <input type="date" id="inputTanggal" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <input type="date" id="inputTanggal" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-700 mb-1">Penanggung Jawab (PPTK) <span class="text-red-500">*</span></label>
-                                    <input type="text" id="inputPptk" required placeholder="Nama Pejabat / Staf Pengaju" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    <input type="text" id="inputPptk" required placeholder="Nama Pejabat PPTK" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                                 </div>
                             </div>
 
-                            <!-- Dynamic Items Table Rincian Pengeluaran -->
+                            <!-- Dynamic Items Table & Kode Rekening -->
                             <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
                                 <div class="flex items-center justify-between mb-3">
-                                    <h4 class="text-xs font-bold uppercase text-slate-700"><i class="fa-solid fa-list-ol mr-1.5 text-blue-600"></i> Rincian Item Pengeluaran</h4>
-                                    <button type="button" onclick="addItemRow()" class="px-2.5 py-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-all">
+                                    <h4 class="text-xs font-bold uppercase text-slate-700"><i class="fa-solid fa-list-check mr-1.5 text-blue-600"></i> Rincian Item Belanja dan Kode Rekening</h4>
+                                    <button type="button" onclick="addItemRow()" class="px-2.5 py-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-all">
                                         <i class="fa-solid fa-plus mr-1"></i> Tambah Item
                                     </button>
                                 </div>
@@ -421,107 +697,144 @@
                                     <table class="w-full text-left text-xs">
                                         <thead class="text-slate-500 font-semibold uppercase text-[10px]">
                                             <tr>
-                                                <th class="p-2 w-1/2">Deskripsi Barang/Jasa</th>
-                                                <th class="p-2 w-24">Volume</th>
-                                                <th class="p-2 w-36">Harga Satuan (Rp)</th>
-                                                <th class="p-2 w-36">Total (Rp)</th>
-                                                <th class="p-2 text-center w-12">#</th>
+                                                <th class="p-2 w-1/4">Uraian Barang</th>
+                                                <th class="p-2 w-1/4">Kode Rekening Belanja</th>
+                                                <th class="p-2 w-14">Vol</th>
+                                                <th class="p-2 w-24">Harga (Rp)</th>
+                                                <th class="p-2 w-24">Pajak</th>
+                                                <th class="p-2 w-24">Subtotal (Rp)</th>
+                                                <th class="p-2 text-center w-8">#</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="itemsContainer" class="space-y-2">
-                                            <!-- Dynamic Rows injected via JS -->
+                                        <tbody id="itemsContainer">
+                                            <!-- Dynamic Injected Rows -->
                                         </tbody>
                                     </table>
                                 </div>
 
-                                <!-- Total Calculation Bar -->
-                                <div class="mt-4 pt-3 border-t border-slate-200 flex justify-end items-center space-x-3">
-                                    <span class="text-xs font-bold text-slate-600">TOTAL SPJ KESELURUHAN:</span>
-                                    <span id="grandTotalDisplay" class="text-base font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-lg border border-blue-200">Rp 0</span>
+                                <!-- Tax Summary Footer Bar -->
+                                <div class="mt-4 pt-3 border-t border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-3 bg-white p-3 rounded-lg border">
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Total Bruto Belanja</span>
+                                        <span id="grandBrutoDisplay" class="text-sm font-bold text-slate-800">Rp 0</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-[10px] text-amber-600 font-bold uppercase block">Total Potongan Pajak</span>
+                                        <span id="grandTaxDisplay" class="text-sm font-bold text-amber-600">Rp 0</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-[10px] text-blue-700 font-bold uppercase block">Total Netto SPJ</span>
+                                        <span id="grandNettoDisplay" class="text-base font-extrabold text-blue-700">Rp 0</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Upload Berkas Lampiran Simulasi -->
+                            <!-- File Attachment Drag & Drop Area -->
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-2">Simulasi Upload Lampiran File (PDF / Gambar / Doc)</label>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                    <label class="border border-dashed border-slate-300 rounded-lg p-3 text-center cursor-pointer hover:bg-slate-50 transition-all block">
-                                        <i class="fa-solid fa-file-invoice text-slate-400 text-xl mb-1 block"></i>
-                                        <span class="text-[11px] font-medium text-slate-600 block">Kwitansi</span>
-                                        <input type="file" id="fileKwitansi" class="hidden" onchange="updateFileStatus(this, 'statusKwitansi')">
-                                        <span id="statusKwitansi" class="text-[10px] text-slate-400 mt-1 block">Belum ada</span>
-                                    </label>
-
-                                    <label class="border border-dashed border-slate-300 rounded-lg p-3 text-center cursor-pointer hover:bg-slate-50 transition-all block">
-                                        <i class="fa-solid fa-receipt text-slate-400 text-xl mb-1 block"></i>
-                                        <span class="text-[11px] font-medium text-slate-600 block">Nota / Toko</span>
-                                        <input type="file" id="fileNota" class="hidden" onchange="updateFileStatus(this, 'statusNota')">
-                                        <span id="statusNota" class="text-[10px] text-slate-400 mt-1 block">Belum ada</span>
-                            <!-- Upload Berkas Lampiran & Upload Nota Lengkap -->
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-2">Upload File Nota Belanja & Dokumen SPJ (PDF / PNG / JPG)</label>
-                                
-                                <!-- Drag & Drop Box Nota Utama -->
-                                <div id="dropZone" onclick="document.getElementById('fileNotaInput').click()" class="border-2 border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 rounded-xl p-5 text-center cursor-pointer transition-all mb-4">
-                                    <i class="fa-solid fa-cloud-arrow-up text-blue-500 text-3xl mb-2"></i>
-                                    <p class="text-xs font-bold text-slate-700">Klik atau Drag & Drop Berkas Nota / Kwitansi Lengkap Di Sini</p>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2">Upload Lampiran File Nota / Kwitansi (Drag and Drop)</label>
+                                <div id="dropZone" onclick="document.getElementById('fileNotaInput').click()" class="border-2 border-dashed border-blue-300 bg-blue-50/40 hover:bg-blue-50 rounded-xl p-5 text-center cursor-pointer transition-all mb-3">
+                                    <i class="fa-solid fa-cloud-arrow-up text-blue-500 text-3xl mb-1"></i>
+                                    <p class="text-xs font-bold text-slate-700">Klik atau Drag and Drop Berkas Nota Di Sini</p>
                                     <p class="text-[10px] text-slate-500 mt-0.5">Mendukung format PDF, PNG, JPG (Maks 5MB per file)</p>
                                     <input type="file" id="fileNotaInput" multiple accept=".pdf,image/*" class="hidden" onchange="handleNotaFilesUpload(this.files)">
                                 </div>
 
-                                <!-- Dynamic Uploaded Nota Files Preview Grid -->
-                                <div id="uploadedFilesPreview" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                                    <!-- Injected via JS -->
+                                <div id="uploadedFilesPreview" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                    <!-- Dynamic Previews -->
                                 </div>
                             </div>
 
-                            <!-- Action Submit -->
-                <!-- SECTION 5: PENGATURAN AKUN & PROFIL -->
-                <section id="view-profil-pengaturan" class="tab-content hidden space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
-                        <!-- Ubah Account Credentials -->
-                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                            <h3 class="text-base font-bold text-slate-800 mb-1"><i class="fa-solid fa-key text-blue-600 mr-2"></i>Ubah Username & Password</h3>
-                            <p class="text-xs text-slate-500 mb-4">Perbarui kredensial akun login Anda secara mandiri.</p>
-
-                            <form id="updateProfileForm" onsubmit="handleProfileUpdate(event)" class="space-y-4">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Username Baru</label>
-                                    <input type="text" id="newUsername" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password Lama</label>
-                                    <input type="password" id="oldPassword" required placeholder="••••••••" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password Baru</label>
-                                    <input type="password" id="newPassword" required placeholder="••••••••" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                </div>
-
-                                <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-xs shadow transition-all">
-                                    <i class="fa-solid fa-floppy-disk mr-1.5"></i> Simpan Perubahan Kredensial
+                            <div class="flex justify-end space-x-2 pt-2 border-t">
+                                <button type="button" onclick="switchTab('daftar-spj')" class="px-4 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-bold rounded-lg">Batal</button>
+                                <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-md transition-all">
+                                    <i class="fa-solid fa-paper-plane mr-1.5"></i> Simpan dan Ajukan SPJ
                                 </button>
-                            </form>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- 7. NOTIFIKASI & LOG VIEW -->
+                <section id="view-activity-log" class="tab-content hidden space-y-4 max-w-4xl">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-800 text-sm mb-4"><i class="fa-solid fa-clock-rotate-left text-blue-600 mr-2"></i>Log Aktivitas System</h3>
+                        <div class="space-y-3" id="activityLogContainer">
+                            <!-- Injected Logs -->
                         </div>
+                    </div>
+                </section>
 
-                        <!-- System Configuration -->
-                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
-                            <h3 class="text-base font-bold text-slate-800 border-b pb-3"><i class="fa-solid fa-sliders text-slate-600 mr-2"></i>Pengaturan Aplikasi</h3>
-                            
-                            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs">
-                                <span class="font-bold text-slate-700 block mb-1">Reset Data Simulasi</span>
-                                <p class="text-slate-500 mb-3">Kembalikan seluruh daftar SPJ ke data sampel awal.</p>
-                                <button onclick="resetDemoData()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded font-medium transition-all">
-                                    <i class="fa-solid fa-rotate-left mr-1"></i> Reset Data SPJ
-                                </button>
-                            </div>
+                <!-- 8. REKAPITULASI DIVISI VIEW -->
+                <section id="view-rekapitulasi" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="divisiStatCards">
+                        <!-- Injected Stat Cards -->
+                    </div>
 
-                            <div class="p-3 bg-blue-50 rounded-lg border border-blue-200 text-xs text-blue-900">
-                                <span class="font-bold block mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Hosting GitHub Pages</span>
-                                <p class="leading-relaxed">Aplikasi bersifat client-side full interface, aman di-deploy secara langsung tanpa server-backend tambahan.</p>
-                            </div>
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-800 text-sm mb-4">Rekapitulasi Anggaran Divisi</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 uppercase text-[10px] font-bold text-slate-700 border-b">
+                                    <tr>
+                                        <th class="p-3">Nama Divisi</th>
+                                        <th class="p-3 text-center">Jumlah SPJ</th>
+                                        <th class="p-3">Total Bruto</th>
+                                        <th class="p-3">Total Pajak</th>
+                                        <th class="p-3">Total Netto Realisasi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rekapTableBody" class="divide-y divide-slate-200">
+                                    <!-- Injected JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 9. REALISASI JENIS BELANJA VIEW -->
+                <section id="view-laporan-realisasi" class="tab-content hidden space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                        <h3 class="font-bold text-slate-800 text-sm mb-4">Laporan Realisasi Berdasarkan Jenis Belanja</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 uppercase text-[10px] font-bold text-slate-700 border-b">
+                                    <tr>
+                                        <th class="p-3">Jenis Belanja</th>
+                                        <th class="p-3 text-center">Jumlah SPJ</th>
+                                        <th class="p-3">Total Belanja Netto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="realisasiTableBody" class="divide-y divide-slate-200">
+                                    <!-- Injected JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 10. KELOLA 3 AKUN PROFILE VIEW -->
+                <section id="view-kelola-akun" class="tab-content hidden max-w-4xl space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <h3 class="text-base font-bold text-slate-800 mb-1"><i class="fa-solid fa-users-gear text-blue-600 mr-2"></i>Kelola 3 Profil Pengguna System</h3>
+                        <p class="text-xs text-slate-500 mb-6">Informasi akun login dan hak akses aplikasi.</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="accountsCardsContainer">
+                            <!-- Injected Cards -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 11. PENGATURAN & RESET VIEW -->
+                <section id="view-pengaturan-sistem" class="tab-content hidden max-w-3xl space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+                        <h3 class="text-base font-bold text-slate-800 border-b pb-3"><i class="fa-solid fa-sliders text-slate-600 mr-2"></i>Pengaturan System and Database Local</h3>
+                        
+                        <div class="p-4 bg-red-50 rounded-xl border border-red-200 text-xs text-red-900">
+                            <span class="font-bold block text-sm mb-1">Reset Data Simulasi Ke Bawaan</span>
+                            <p class="text-red-700 mb-3">Mengembalikan seluruh data SPJ, BKU, dan Kode Rekening ke data awal simulasi v4.0 Enterprise.</p>
+                            <button onclick="resetDemoData()" class="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold shadow-sm transition-all">
+                                <i class="fa-solid fa-rotate-left mr-1.5"></i> Reset Semua Data
+                            </button>
                         </div>
                     </div>
                 </section>
@@ -530,204 +843,442 @@
         </main>
     </div>
 
-    <!-- MODAL DETAIL & PRINT PREVIEW SPJ -->
+    <!-- MODAL INPUT TRANSAKSI BKU (NEW MODAL) -->
+    <div id="bkuInputModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200">
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-xs"><i class="fa-solid fa-book mr-2 text-emerald-400"></i>Tambah Transaksi Buku Kas Umum (BKU)</h3>
+                <button onclick="closeBkuModalForm()" class="text-slate-400 hover:text-white text-base"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="bkuForm" onsubmit="handleBkuFormSubmit(event)" class="p-5 space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Tanggal Transaksi BKU <span class="text-red-500">*</span></label>
+                    <input type="date" id="bkuInputTanggal" required class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Pilih Ref SPJ / No. Bukti Transaksi</label>
+                    <select id="bkuInputRefSpj" onchange="autoFillBkuFromSpj(this)" class="w-full p-2 border border-slate-300 rounded-lg">
+                        <option value="">-- Non-SPJ / Manual Bukti --</option>
+                        <!-- Injected JS -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">No. Bukti Transaksi <span class="text-red-500">*</span></label>
+                    <input type="text" id="bkuInputNoBukti" required placeholder="Contoh: BKU/2026/001 atau No. SPJ" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Kode Rekening Keuangan</label>
+                    <select id="bkuInputKodeRekening" class="w-full p-2 border border-slate-300 rounded-lg">
+                        <option value="">-- Non-Kode Rekening (Kas Masuk APBD) --</option>
+                        <!-- Injected JS -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Uraian Transaksi BKU <span class="text-red-500">*</span></label>
+                    <textarea id="bkuInputUraian" required rows="2" placeholder="Uraian transaksi pencatatan kas..." class="w-full p-2 border border-slate-300 rounded-lg"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-emerald-700 mb-1">Penerimaan (Debet) Rp</label>
+                        <input type="number" min="0" value="0" id="bkuInputPenerimaan" class="w-full p-2 border border-slate-300 rounded-lg font-bold text-emerald-700">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-red-700 mb-1">Pengeluaran (Kredit) Rp</label>
+                        <input type="number" min="0" value="0" id="bkuInputPengeluaran" class="w-full p-2 border border-slate-300 rounded-lg font-bold text-red-700">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-3 border-t">
+                    <button type="button" onclick="closeBkuModalForm()" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg font-bold">Batal</button>
+                    <button type="submit" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan BKU
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH KODE REKENING (NEW MODAL) -->
+    <div id="rekeningInputModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200">
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-xs"><i class="fa-solid fa-list-ol mr-2 text-blue-400"></i>Tambah Master Kode Rekening</h3>
+                <button onclick="closeModalTambahKodeRekening()" class="text-slate-400 hover:text-white text-base"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="rekeningForm" onsubmit="handleRekeningFormSubmit(event)" class="p-5 space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Kode Rekening <span class="text-red-500">*</span></label>
+                    <input type="text" id="rekInputKode" required placeholder="Contoh: 5.1.02.01.0001" class="w-full p-2 border border-slate-300 rounded-lg font-mono font-bold">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Nama Uraian Rekening <span class="text-red-500">*</span></label>
+                    <input type="text" id="rekInputNama" required placeholder="Contoh: Belanja Bahan-Bahan Bangunan" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Kategori Jenis Belanja</label>
+                    <select id="rekInputKategori" class="w-full p-2 border border-slate-300 rounded-lg">
+                        <option value="Belanja Barang/Jasa">Belanja Barang/Jasa</option>
+                        <option value="Belanja Modal">Belanja Modal</option>
+                        <option value="Belanja Pegawai">Belanja Pegawai</option>
+                        <option value="Belanja Perjalanan Dinas">Belanja Perjalanan Dinas</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Pagu Anggaran (Rp) <span class="text-red-500">*</span></label>
+                    <input type="number" min="0" id="rekInputPagu" required value="50000000" class="w-full p-2 border border-slate-300 rounded-lg font-bold">
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-3 border-t">
+                    <button type="button" onclick="closeModalTambahKodeRekening()" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg font-bold">Batal</button>
+                    <button type="submit" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold">Simpan Rekening</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL CETAK LEMBAR BKU RESMI (NEW PRINTABLE) -->
+    <div id="bkuPrintModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center no-print">
+                <h3 class="font-bold text-xs"><i class="fa-solid fa-print mr-2 text-emerald-400"></i>Cetak Laporan Buku Kas Umum (BKU) Official</h3>
+                <button onclick="closePrintableBKUModal()" class="text-slate-400 hover:text-white text-base"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div id="printableBKUModal" class="p-6 overflow-y-auto space-y-4 text-xs text-slate-800 bg-white">
+                <div class="text-center border-b-2 border-slate-900 pb-3">
+                    <h2 class="text-sm font-extrabold uppercase tracking-wide">PEMERINTAH KOTA / PEMERINTAH PROVINSI</h2>
+                    <h3 class="text-xs font-bold uppercase">DINAS KEUANGAN DAN PENGELOLAAN ASET DAERAH</h3>
+                    <h4 class="text-xs font-extrabold uppercase underline mt-2">BUKU KAS UMUM (BKU) BENDAHARA PENGELUARAN</h4>
+                    <p class="text-[10px] text-slate-500 italic mt-0.5">Tahun Anggaran: 2026 • Periode: Januari - Maret 2026</p>
+                </div>
+
+                <table class="w-full text-left border-collapse text-[10px]">
+                    <thead>
+                        <tr class="bg-slate-100 border-b border-slate-900 font-bold uppercase">
+                            <th class="p-1.5 border border-slate-300 text-center">No</th>
+                            <th class="p-1.5 border border-slate-300">Tanggal</th>
+                            <th class="p-1.5 border border-slate-300">No. Bukti</th>
+                            <th class="p-1.5 border border-slate-300">Kode Rekening</th>
+                            <th class="p-1.5 border border-slate-300">Uraian Transaksi</th>
+                            <th class="p-1.5 border border-slate-300 text-right">Penerimaan (Rp)</th>
+                            <th class="p-1.5 border border-slate-300 text-right">Pengeluaran (Rp)</th>
+                            <th class="p-1.5 border border-slate-300 text-right">Saldo (Rp)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bkuPrintTableBody">
+                        <!-- Injected JS -->
+                    </tbody>
+                </table>
+
+                <!-- BKU Summary Footer Info -->
+                <div class="grid grid-cols-2 gap-4 border p-3 rounded bg-slate-50 text-[10px]">
+                    <div>
+                        <p class="font-bold">Ringkasan Kas BKU:</p>
+                        <p>Total Penerimaan (Debet): <span class="font-bold text-emerald-700" id="bkuPrintTotalPenerimaan">Rp 0</span></p>
+                        <p>Total Pengeluaran (Kredit): <span class="font-bold text-red-700" id="bkuPrintTotalPengeluaran">Rp 0</span></p>
+                    </div>
+                    <div>
+                        <p class="font-bold">Saldo Akhir Kas BKU:</p>
+                        <p class="text-sm font-extrabold text-blue-800" id="bkuPrintSaldoAkhir">Rp 0</p>
+                    </div>
+                </div>
+
+                <!-- Digital Signatures -->
+                <div class="pt-6 grid grid-cols-2 text-center text-[10px]">
+                    <div>
+                        <p>Mengetahui,</p>
+                        <p class="font-bold">Pengguna Anggaran / Pejabat Pembuat Komitmen</p>
+                        <p class="font-bold text-slate-800 border-t border-slate-300 inline-block px-6 pt-0.5 mt-12">Budi Santoso, S.ST</p>
+                    </div>
+                    <div>
+                        <p>Yogyakarta, 31 Maret 2026</p>
+                        <p class="font-bold">Bendahara Pengeluaran</p>
+                        <p class="font-bold text-slate-800 border-t border-slate-300 inline-block px-6 pt-0.5 mt-12">Drs. Heru Kurniawan</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-100 p-3.5 border-t border-slate-200 flex justify-end space-x-2 no-print">
+                <button onclick="exportBKUToPDF()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow-sm">
+                    <i class="fa-solid fa-file-pdf mr-1.5"></i> Download PDF BKU
+                </button>
+                <button onclick="window.print()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg shadow-sm">
+                    <i class="fa-solid fa-print mr-1.5"></i> Cetak Dokumen BKU
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL SPJ & PRINTABLE OFFICIAL DOCUMENT PREVIEW -->
     <div id="detailModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
-            <!-- Modal Header -->
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
             <div class="bg-slate-900 text-white p-4 flex justify-between items-center no-print">
                 <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-file-invoice text-blue-400 text-lg"></i>
-                    <h3 class="font-bold text-sm" id="modalTitle">Rincian Lembar SPJ</h3>
+                    <i class="fa-solid fa-file-invoice text-blue-400 text-base"></i>
+                    <h3 class="font-bold text-xs" id="modalTitle">Lembar Resmi SPJ Keuangan</h3>
                 </div>
-                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white text-lg">
+                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white text-base">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <!-- Printable Body -->
-            <div id="printableModal" class="p-6 overflow-y-auto space-y-6 text-xs text-slate-700">
-                <!-- Header Dokumen SPJ -->
-                <div class="text-center border-b-2 border-slate-800 pb-4">
-                    <h2 class="text-lg font-bold uppercase tracking-wide text-slate-900">SURAT PERTANGGUNGJAWABAN (SPJ) KEUANGAN</h2>
-                    <p class="text-xs text-slate-500 font-mono" id="modalSpjNo">SPJ/2026/001</p>
+            <div id="printableModal" class="p-6 overflow-y-auto space-y-5 text-xs text-slate-800 bg-white">
+                <div class="text-center border-b-2 border-slate-900 pb-3">
+                    <h2 class="text-sm font-extrabold tracking-wider uppercase text-slate-900">PEMERINTAH KOTA / PEMERINTAH PROVINSI</h2>
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">DINAS KEUANGAN DAN PENGELOLAAN ASET DAERAH</h3>
+                    <p class="text-[9px] text-slate-500 italic">Jl. Malioboro No. 45, Kompleks Perkantoran Pemerintah • Telp: (0274) 555-0192</p>
                 </div>
 
-                <!-- Info Grid -->
-                <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div class="text-center py-1">
+                    <h4 class="text-xs font-bold uppercase text-slate-900 underline">SURAT PERTANGGUNGJAWABAN (SPJ) KEUANGAN</h4>
+                    <p class="text-[10px] font-mono text-slate-600" id="modalSpjNo">SPJ/2026/001</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 text-[11px]">
                     <div>
-                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Nama Kegiatan</span>
-                        <p class="font-bold text-slate-800 text-sm" id="modalKegiatan">-</p>
+                        <span class="text-[9px] text-slate-400 font-bold uppercase block">Nama Kegiatan</span>
+                        <p class="font-bold text-slate-800" id="modalKegiatan">-</p>
                     </div>
                     <div>
-                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Divisi / Unit Kerja</span>
+                        <span class="text-[9px] text-slate-400 font-bold uppercase block">Divisi / Unit Kerja</span>
                         <p class="font-semibold text-slate-800" id="modalUnit">-</p>
                     </div>
                     <div>
-                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Tanggal Pengajuan</span>
-                        <p class="font-semibold text-slate-800" id="modalTanggal">-</p>
+                        <span class="text-[9px] text-slate-400 font-bold uppercase block">Jenis Belanja</span>
+                        <p class="font-semibold text-slate-800" id="modalJenisBelanja">-</p>
                     </div>
                     <div>
-                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Penanggung Jawab (PPTK)</span>
-                        <p class="font-semibold text-slate-800" id="modalPptk">-</p>
+                        <span class="text-[9px] text-slate-400 font-bold uppercase block">Tanggal Pengajuan dan PPTK</span>
+                        <p class="font-semibold text-slate-800"><span id="modalTanggal">-</span> • <span id="modalPptk">-</span></p>
                     </div>
                 </div>
 
-                <!-- Items Detail -->
                 <div>
-                    <h4 class="font-bold uppercase text-slate-800 mb-2 border-b pb-1">Rincian Item Pengeluaran</h4>
-                    <table class="w-full text-left border-collapse">
+                    <h5 class="font-bold uppercase text-[10px] text-slate-800 mb-1.5 border-b pb-1">Rincian Item Pengeluaran dan Kode Rekening</h5>
+                    <table class="w-full text-left border-collapse text-[10px]">
                         <thead>
-                            <tr class="bg-slate-100 border-b border-slate-300 text-slate-700 uppercase text-[10px]">
-                                <th class="p-2 border border-slate-200">No</th>
-                                <th class="p-2 border border-slate-200">Deskripsi Barang/Jasa</th>
-                                <th class="p-2 border border-slate-200 text-center">Vol</th>
-                                <th class="p-2 border border-slate-200 text-right">Harga Satuan</th>
-                                <th class="p-2 border border-slate-200 text-right">Total Subtotal</th>
+                            <tr class="bg-slate-100 border-b border-slate-300 font-bold uppercase">
+                                <th class="p-1.5 border border-slate-200">No</th>
+                                <th class="p-1.5 border border-slate-200">Uraian Barang/Jasa</th>
+                                <th class="p-1.5 border border-slate-200">Kode Rekening</th>
+                                <th class="p-1.5 border border-slate-200 text-center">Vol</th>
+                                <th class="p-1.5 border border-slate-200 text-right">Harga Satuan</th>
+                                <th class="p-1.5 border border-slate-200 text-center">Pajak</th>
+                                <th class="p-1.5 border border-slate-200 text-right">Subtotal Netto</th>
                             </tr>
                         </thead>
                         <tbody id="modalItemsBody">
-                            <!-- Injected by JS -->
+                            <!-- Injected JS -->
                         </tbody>
                         <tfoot>
                             <tr class="bg-slate-50 font-bold">
-                                <td colspan="4" class="p-2 border border-slate-200 text-right uppercase">Total Rincian SPJ:</td>
-                                <td class="p-2 border border-slate-200 text-right text-blue-700 font-bold text-sm" id="modalTotalAmount">Rp 0</td>
+                                <td colspan="6" class="p-1.5 border border-slate-200 text-right uppercase">Total Netto SPJ:</td>
+                                <td class="p-1.5 border border-slate-200 text-right text-blue-800 text-xs font-bold" id="modalTotalAmount">Rp 0</td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
 
-                <!-- Verified Status & Attachments -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="border border-slate-200 p-3 rounded-lg">
-                        <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Status Verifikasi</span>
-                        <span id="modalStatusBadge" class="px-2 py-0.5 rounded text-[11px] font-bold">Draft</span>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="border p-2.5 rounded-lg bg-slate-50">
+                        <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Status Verifikasi</span>
+                        <span id="modalStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-bold">Draft</span>
+                        <p class="text-[10px] text-slate-600 mt-1 italic" id="modalVerifNote">Catatan: Belum ada catatan verifikasi.</p>
                     </div>
-
-                    <div class="border border-slate-200 p-3 rounded-lg">
-                        <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Berkas Lampiran & File Nota</span>
-                        <div class="flex flex-wrap gap-1.5" id="modalAttachmentsList">
+                    <div class="border p-2.5 rounded-lg bg-slate-50">
+                        <span class="text-[9px] text-slate-400 font-bold uppercase block mb-1">Lampiran File dan Nota</span>
+                        <div class="flex flex-wrap gap-1" id="modalAttachmentsList">
                             <!-- Injected JS -->
                         </div>
                     </div>
                 </div>
 
-                <!-- Tanda Tangan Digital Area (For Print) -->
-                <div class="pt-8 grid grid-cols-2 text-center text-xs">
+                <div class="pt-6 grid grid-cols-2 text-center text-[10px]">
                     <div>
-                        <p>Diverifikasi Oleh,</p>
-                        <p class="font-bold mt-12">Bendahara Keuangan</p>
+                        <p>Diverifikasi dan Disetujui Oleh,</p>
+                        <p class="font-bold text-slate-400 mt-10" id="modalSignVerif">[ Tanda Tangan Verifikator ]</p>
+                        <p class="font-bold text-slate-800 border-t border-slate-300 inline-block px-4 pt-0.5 mt-1">Bendahara Keuangan / Auditor</p>
                     </div>
                     <div>
                         <p>Yang Mengajukan,</p>
-                        <p class="font-bold mt-12" id="modalSignPptk">PPTK Kegiatan</p>
+                        <p class="font-bold text-slate-800 mt-10" id="modalSignPptk">PPTK Kegiatan</p>
+                        <p class="font-bold text-slate-800 border-t border-slate-300 inline-block px-4 pt-0.5 mt-1">Pejabat Pembuat Komitmen</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Modal Footer Actions -->
-            <div class="bg-slate-100 p-4 border-t border-slate-200 flex justify-between items-center no-print">
+            <div class="bg-slate-100 p-3.5 border-t border-slate-200 flex justify-between items-center no-print">
                 <div class="flex items-center space-x-2" id="statusChangeActions">
-                    <span class="text-xs font-semibold text-slate-500">Ubah Status:</span>
-                    <button onclick="updateSpjStatus('Disetujui')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded font-medium">Setujui</button>
-                    <button onclick="updateSpjStatus('Ditolak')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded font-medium">Tolak</button>
+                    <span class="text-[11px] font-bold text-slate-600">Aksi Verifikasi:</span>
+                    <button onclick="updateSpjStatus('Disetujui')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded font-bold">
+                        <i class="fa-solid fa-check mr-1"></i>Setujui
+                    </button>
+                    <button onclick="promptRejectStatus()" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded font-bold">
+                        <i class="fa-solid fa-xmark mr-1"></i>Tolak
+                    </button>
                 </div>
 
                 <div class="flex items-center space-x-2">
-                    <button onclick="exportToPDF()" class="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg flex items-center shadow-sm transition-all">
+                    <button onclick="exportToPDF()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg flex items-center shadow-sm">
                         <i class="fa-solid fa-file-pdf mr-1.5"></i> Download PDF
                     </button>
-                    <button onclick="window.print()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg flex items-center shadow-sm">
-                        <i class="fa-solid fa-print mr-1.5"></i> Cetak Dokumen SPJ
+                    <button onclick="window.print()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg flex items-center shadow-sm">
+                        <i class="fa-solid fa-print mr-1.5"></i> Cetak SPJ
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- JAVASCRIPT SYSTEM LOGIC V4.0 -->
     <script>
-        // ACCOUNT CREDENTIALS STATE
-        let appAccount = JSON.parse(localStorage.getItem('espj_account')) || {
-            username: 'admin',
-            password: 'admin123'
+        // 3 USER ACCOUNTS DEFINITION
+        const defaultAccounts = {
+            'admin': {
+                username: 'admin',
+                password: 'admin123',
+                name: 'Super Admin / Bendahara',
+                role: 'Super Admin',
+                badgeClass: 'bg-blue-100 text-blue-800 border-blue-200',
+                desc: 'Akses penuh SPJ, Modul BKU, Kode Rekening & Pengaturan.'
+            },
+            'pptk_kegiatan': {
+                username: 'pptk_kegiatan',
+                password: 'pptk123',
+                name: 'Budi Santoso, S.ST (PPTK)',
+                role: 'PPTK Kegiatan',
+                badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                desc: 'Akses pengajuan SPJ baru dan pencatatan BKU.'
+            },
+            'verifikator': {
+                username: 'verifikator',
+                password: 'verif123',
+                name: 'Drs. Heru Kurniawan (Auditor)',
+                role: 'Verifikator Keuangan',
+                badgeClass: 'bg-purple-100 text-purple-800 border-purple-200',
+                desc: 'Akses review, verifikasi SPJ & cetak BKU.'
+            }
         };
 
-        // NOTA UPLOADED FILES ARRAY (TEMPORARY FOR FORM)
-        let tempNotaFiles = [];
+        // MASTER KODE REKENING DEFAULT DATA
+        const defaultKodeRekening = [
+            { kode: '5.1.02.01.0001', nama: 'Belanja Bahan-Bahan Baku / Pakai Habis', kategori: 'Belanja Barang/Jasa', pagu: 150000000 },
+            { kode: '5.1.02.02.0001', nama: 'Belanja Jasa Kantor & Langganan', kategori: 'Belanja Barang/Jasa', pagu: 85000000 },
+            { kode: '5.1.02.04.0001', nama: 'Belanja Perjalanan Dinas Dalam Daerah', kategori: 'Belanja Perjalanan Dinas', pagu: 60000000 },
+            { kode: '5.2.02.05.0001', nama: 'Belanja Modal Peralatan Komputer & IT', kategori: 'Belanja Modal', pagu: 200000000 },
+            { kode: '5.1.01.01.0001', nama: 'Belanja Honorarium Staf & Pegawai', kategori: 'Belanja Pegawai', pagu: 120000000 }
+        ];
 
-        // DATA INITIAL STATE & SAMPLE DEMO
+        // DEMO INITIAL SPJ DATA
         const initialSpjData = [
             {
                 id: 'SPJ/2026/001',
-                kegiatan: 'Pengadaan APD & Perlangkapan Kesehatan Kerja',
-                unit: 'SDM & Umum',
+                kegiatan: 'Pengadaan Laptop Server & Peripheral IT',
+                jenisBelanja: 'Belanja Modal',
+                unit: 'IT & Operasional',
                 tanggal: '2026-02-10',
-                pptk: 'Budi Santoso, S.ST',
+                pptk: 'Eko Prasetyo, M.Kom',
                 status: 'Disetujui',
+                verifNote: 'Lengkap dan memenuhi syarat audit.',
                 items: [
-                    { desc: 'Masker Medis Box', vol: 10, harga: 35000 },
-                    { desc: 'Hand Sanitizer 5L', vol: 4, harga: 150000 }
+                    { desc: 'Laptop Workstation i9', kodeRekening: '5.2.02.05.0001', vol: 2, harga: 22000000, taxType: 'PPN11' },
+                    { desc: 'Switch Cisco 24 Port', kodeRekening: '5.2.02.05.0001', vol: 1, harga: 8500000, taxType: 'PPh22' }
                 ],
-                total: 950000,
                 lampiranFiles: [
-                    { name: 'Kwitansi_Resmi.pdf', size: '245 KB', type: 'application/pdf' },
-                    { name: 'Faktur_Toko_Kesehatan.png', size: '1.2 MB', type: 'image/png' }
+                    { name: 'Faktur_Kwitansi_Komputer.pdf', size: '420 KB', type: 'application/pdf' },
+                    { name: 'BAST_Serah_Terima.png', size: '1.1 MB', type: 'image/png' }
                 ]
             },
             {
                 id: 'SPJ/2026/002',
-                kegiatan: 'Maintenance Server & Lisensi Cloud Database',
-                unit: 'IT & Operasional',
+                kegiatan: 'Perjalanan Dinas Koordinasi Anggaran Pusat',
+                jenisBelanja: 'Belanja Perjalanan Dinas',
+                unit: 'Keuangan',
                 tanggal: '2026-02-18',
-                pptk: 'Eko Prasetyo, M.Kom',
+                pptk: 'Siti Rahmawati, SE',
                 status: 'Verifikasi',
+                verifNote: 'Sedang diteliti oleh tim verifikator.',
                 items: [
-                    { desc: 'Sewa Cloud Storage Server 1 Thn', vol: 1, harga: 4500000 },
-                    { desc: 'SSL Wildcard Certificate', vol: 1, harga: 1200000 }
+                    { desc: 'Tiket Pesawat Pulang Pergi', kodeRekening: '5.1.02.04.0001', vol: 3, harga: 2500000, taxType: 'NONE' },
+                    { desc: 'Uang Harian & Hotel', kodeRekening: '5.1.02.04.0001', vol: 3, harga: 1200000, taxType: 'PPh21' }
                 ],
-                total: 5700000,
                 lampiranFiles: [
-                    { name: 'Nota_Invoice_Cloud.pdf', size: '512 KB', type: 'application/pdf' }
+                    { name: 'Tiket_Hotel_Lampiran.pdf', size: '890 KB', type: 'application/pdf' }
                 ]
             }
         ];
 
-        // Store App State
-        let spjList = JSON.parse(localStorage.getItem('espj_data')) || initialSpjData;
-        let activeTab = 'dashboard';
+        // BKU TRANSACTIONS INITIAL DATA
+        const initialBkuData = [
+            {
+                id: 'BKU-001',
+                tanggal: '2026-01-02',
+                noBukti: 'DPA/2026/001',
+                kodeRekening: '',
+                uraian: 'Penerimaan Kas APBD / DPA TA 2026',
+                penerimaan: 500000000,
+                pengeluaran: 0,
+                refSpjId: ''
+            },
+            {
+                id: 'BKU-002',
+                tanggal: '2026-02-10',
+                noBukti: 'SPJ/2026/001',
+                kodeRekening: '5.2.02.05.0001',
+                uraian: 'Pembayaran SPJ Pengadaan Laptop Server & Peripheral IT',
+                penerimaan: 0,
+                pengeluaran: 47685000,
+                refSpjId: 'SPJ/2026/001'
+            }
+        ];
+
+        const initialLogs = [
+            { date: '2026-02-18 10:15', user: 'pptk_kegiatan', text: 'Mengajukan SPJ Baru No. SPJ/2026/002' },
+            { date: '2026-02-10 14:30', user: 'admin', text: 'Mencatat Transaksi BKU No. SPJ/2026/001' }
+        ];
+
+        let appAccounts = JSON.parse(localStorage.getItem('espj_v4_accounts')) || defaultAccounts;
+        let masterKodeRekening = JSON.parse(localStorage.getItem('espj_v4_rekening')) || defaultKodeRekening;
+        let spjList = JSON.parse(localStorage.getItem('espj_v4_spj')) || initialSpjData;
+        let bkuList = JSON.parse(localStorage.getItem('espj_v4_bku')) || initialBkuData;
+        let activityLogs = JSON.parse(localStorage.getItem('espj_v4_logs')) || initialLogs;
+
+        let currentUserKey = localStorage.getItem('espj_v4_userkey') || null;
+        let activeTab = 'bku-modul';
         let currentDetailId = null;
+        let tempNotaFiles = [];
 
-        // ON INITIAL LOAD
+        // INITIAL LOAD
         window.onload = function() {
-            updateAccountHintDisplay();
-
-            // Check login status
-            const currentUser = localStorage.getItem('espj_user');
-            if(!currentUser) {
+            applyQuickUserSelection();
+            
+            if(!currentUserKey || !appAccounts[currentUserKey]) {
                 document.getElementById('loginModal').classList.remove('hidden');
             } else {
                 document.getElementById('loginModal').classList.add('hidden');
-                document.getElementById('userNameDisplay').innerText = currentUser;
-                document.getElementById('userAvatar').innerText = currentUser.charAt(0).toUpperCase();
+                updateActiveUserUI(currentUserKey);
             }
 
             addItemRow();
             addItemRow();
             document.getElementById('inputTanggal').valueAsDate = new Date();
+            document.getElementById('bkuInputTanggal').valueAsDate = new Date();
+            
+            populateKodeRekeningDropdowns();
+            populateRefSpjDropdown();
             renderAll();
         };
 
-        function updateAccountHintDisplay() {
-            document.getElementById('hintUser').innerText = appAccount.username;
-            document.getElementById('hintPass').innerText = appAccount.password;
-            document.getElementById('newUsername').value = appAccount.username;
-        }
-
-        // LOGIN & PROFILE MANAGEMENT
-        function fillQuickLogin() {
-            document.getElementById('usernameInput').value = appAccount.username;
-            document.getElementById('passwordInput').value = appAccount.password;
+        function applyQuickUserSelection() {
+            const key = document.getElementById('quickUserSelect').value;
+            const acc = appAccounts[key];
+            if(acc) {
+                document.getElementById('hintUser').innerText = acc.username;
+                document.getElementById('hintPass').innerText = acc.password;
+                document.getElementById('hintRoleDesc').innerText = acc.desc;
+                document.getElementById('usernameInput').value = acc.username;
+                document.getElementById('passwordInput').value = acc.password;
+            }
         }
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -735,102 +1286,473 @@
             const u = document.getElementById('usernameInput').value;
             const p = document.getElementById('passwordInput').value;
 
-            if(u === appAccount.username && p === appAccount.password) {
-                localStorage.setItem('espj_user', u);
+            let foundKey = null;
+            Object.keys(appAccounts).forEach(k => {
+                if(appAccounts[k].username === u && appAccounts[k].password === p) {
+                    foundKey = k;
+                }
+            });
+
+            if(foundKey) {
+                currentUserKey = foundKey;
+                localStorage.setItem('espj_v4_userkey', foundKey);
                 document.getElementById('loginModal').classList.add('hidden');
-                document.getElementById('userNameDisplay').innerText = u;
-                document.getElementById('userAvatar').innerText = u.charAt(0).toUpperCase();
                 document.getElementById('loginError').classList.add('hidden');
+                updateActiveUserUI(foundKey);
+                addLog(`User '${u}' berhasil masuk sistem.`);
             } else {
                 document.getElementById('loginError').classList.remove('hidden');
             }
         });
 
-        function handleProfileUpdate(e) {
-            e.preventDefault();
-            const newU = document.getElementById('newUsername').value.trim();
-            const oldP = document.getElementById('oldPassword').value;
-            const newP = document.getElementById('newPassword').value;
-
-            if(oldP !== appAccount.password) {
-                alert('Password lama Anda salah!');
-                return;
-            }
-
-            appAccount.username = newU;
-            appAccount.password = newP;
-            localStorage.setItem('espj_account', JSON.stringify(appAccount));
-            localStorage.setItem('espj_user', newU);
-
-            document.getElementById('userNameDisplay').innerText = newU;
-            document.getElementById('userAvatar').innerText = newU.charAt(0).toUpperCase();
-            updateAccountHintDisplay();
-            document.getElementById('oldPassword').value = '';
-            document.getElementById('newPassword').value = '';
-
-            alert('Username dan Password berhasil diperbarui!');
+        function logout() {
+            currentUserKey = null;
+            localStorage.removeItem('espj_v4_userkey');
+            document.getElementById('loginModal').classList.remove('hidden');
         }
 
-        // UPLOAD NOTA FILES HANDLING
-        function handleNotaFilesUpload(files) {
-            Array.from(files).forEach(file => {
-                const sizeKB = (file.size / 1024).toFixed(0);
-                const formattedSize = sizeKB > 1024 ? (sizeKB / 1024).toFixed(1) + ' MB' : sizeKB + ' KB';
-                
-                tempNotaFiles.push({
-                    name: file.name,
-                    size: formattedSize,
-                    type: file.type
+        function updateActiveUserUI(key) {
+            const acc = appAccounts[key];
+            if(!acc) return;
+
+            document.getElementById('sidebarUserName').innerText = acc.name;
+            document.getElementById('sidebarUserRole').innerText = acc.role;
+            document.getElementById('userAvatar').innerText = acc.username.charAt(0).toUpperCase();
+
+            const topBadge = document.getElementById('topRoleBadge');
+            topBadge.innerText = `Role: ${acc.role}`;
+            topBadge.className = `text-[10px] px-2.5 py-0.5 rounded font-bold border ${acc.badgeClass}`;
+        }
+
+        function toggleTree(treeId, iconId) {
+            const tree = document.getElementById(treeId);
+            const icon = document.getElementById(iconId);
+            if(tree.classList.contains('hidden')) {
+                tree.classList.remove('hidden');
+                icon.classList.add('open');
+            } else {
+                tree.classList.add('hidden');
+                icon.classList.remove('open');
+            }
+        }
+
+        function filterByUnitTree(unitName) {
+            switchTab('daftar-spj');
+            document.getElementById('filterUnit').value = unitName;
+            applyFilters();
+        }
+
+        function switchTab(tabId) {
+            activeTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            const target = document.getElementById(`view-${tabId}`);
+            if(target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+                el.classList.add('text-slate-400');
+            });
+
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if(activeNav) {
+                activeNav.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+                activeNav.classList.remove('text-slate-400');
+            }
+
+            const titles = {
+                'dashboard': 'Dashboard Ringkasan Executive',
+                'bku-modul': 'Buku Kas Umum (BKU) Realtime',
+                'kode-rekening-master': 'Master Kode Rekening Keuangan',
+                'bku-rekap-rekening': 'Laporan Serapan per Kode Rekening',
+                'daftar-spj': 'Semua Berkas SPJ Keuangan',
+                'tambah-spj': 'Form Input SPJ & Kode Rekening',
+                'activity-log': 'Notifikasi & Log Aktivitas',
+                'rekapitulasi': 'Rekapitulasi Anggaran Divisi',
+                'laporan-realisasi': 'Laporan Realisasi Jenis Belanja',
+                'kelola-akun': 'Kelola 3 Akun Pengguna',
+                'pengaturan-sistem': 'Pengaturan System & Database'
+            };
+            document.getElementById('pageTitle').innerText = titles[tabId] || 'E-SPJ & BKU System';
+
+            renderAll();
+        }
+
+        // TAX CALCULATION ENGINE
+        function calculateItemTax(bruto, taxType) {
+            let rate = 0;
+            if(taxType === 'PPN11') rate = 0.11;
+            else if(taxType === 'PPh21') rate = 0.05;
+            else if(taxType === 'PPh22') rate = 0.015;
+            else if(taxType === 'PPh23') rate = 0.02;
+
+            const taxAmount = Math.round(bruto * rate);
+            const nettoAmount = bruto - taxAmount;
+            return { taxAmount, nettoAmount };
+        }
+
+        // POPULATE KODE REKENING DROPDOWNS
+        function populateKodeRekeningDropdowns() {
+            const selects = [document.getElementById('bkuInputKodeRekening'), document.getElementById('filterBkuRekening')];
+            selects.forEach(s => {
+                if(!s) return;
+                const currentVal = s.value;
+                if(s.id === 'filterBkuRekening') {
+                    s.innerHTML = '<option value="ALL">Semua Kode Rekening</option>';
+                } else {
+                    s.innerHTML = '<option value="">-- Non-Kode Rekening (Kas Masuk APBD) --</option>';
+                }
+                masterKodeRekening.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.kode;
+                    opt.innerText = `${r.kode} - ${r.nama}`;
+                    s.appendChild(opt);
                 });
+                s.value = currentVal;
+            });
+        }
+
+        function populateRefSpjDropdown() {
+            const select = document.getElementById('bkuInputRefSpj');
+            if(!select) return;
+            select.innerHTML = '<option value="">-- Non-SPJ / Manual Bukti --</option>';
+            spjList.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.innerText = `${s.id} - ${s.kegiatan}`;
+                select.appendChild(opt);
+            });
+        }
+
+        function autoFillBkuFromSpj(elem) {
+            const spjId = elem.value;
+            if(!spjId) return;
+            const spj = spjList.find(x => x.id === spjId);
+            if(spj) {
+                document.getElementById('bkuInputNoBukti').value = spj.id;
+                document.getElementById('bkuInputUraian').value = `Pembayaran SPJ: ${spj.kegiatan}`;
+                
+                let totalNetto = 0;
+                let rekCode = '';
+                spj.items.forEach(it => {
+                    const { nettoAmount } = calculateItemTax(it.vol * it.harga, it.taxType);
+                    totalNetto += nettoAmount;
+                    if(it.kodeRekening) rekCode = it.kodeRekening;
+                });
+
+                document.getElementById('bkuInputPengeluaran').value = totalNetto;
+                document.getElementById('bkuInputPenerimaan').value = 0;
+                if(rekCode) document.getElementById('bkuInputKodeRekening').value = rekCode;
+            }
+        }
+
+        // BKU TRANSACTION LOGIC WITH RUNNING BALANCE
+        function renderBkuTable() {
+            const tbody = document.getElementById('bkuTableBody');
+            tbody.innerHTML = '';
+
+            const filterBulan = document.getElementById('filterBkuBulan').value;
+            const filterRek = document.getElementById('filterBkuRekening').value;
+
+            // Sort BKU by date
+            let sortedBku = [...bkuList].sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal));
+
+            let totalDebet = 0;
+            let totalKredit = 0;
+            let runningBalance = 0;
+            let rowNo = 1;
+
+            sortedBku.forEach(b => {
+                const month = b.tanggal.substring(5,7);
+                const matchMonth = (filterBulan === 'ALL') || (month === filterBulan);
+                const matchRek = (filterRek === 'ALL') || (b.kodeRekening === filterRek);
+
+                runningBalance += (parseFloat(b.penerimaan) || 0) - (parseFloat(b.pengeluaran) || 0);
+                totalDebet += parseFloat(b.penerimaan) || 0;
+                totalKredit += parseFloat(b.pengeluaran) || 0;
+
+                if(matchMonth && matchRek) {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition-colors";
+                    tr.innerHTML = `
+                        <td class="p-3 text-center font-bold text-slate-500">${rowNo++}</td>
+                        <td class="p-3 font-semibold text-slate-800">${b.tanggal}</td>
+                        <td class="p-3 font-mono font-bold text-blue-700">${b.noBukti}</td>
+                        <td class="p-3 font-mono font-bold text-slate-600">${b.kodeRekening || '-'}</td>
+                        <td class="p-3 font-medium text-slate-800 max-w-xs">${b.uraian}</td>
+                        <td class="p-3 text-right font-bold text-emerald-600">${b.penerimaan > 0 ? formatIDR(b.penerimaan) : '-'}</td>
+                        <td class="p-3 text-right font-bold text-red-600">${b.pengeluaran > 0 ? formatIDR(b.pengeluaran) : '-'}</td>
+                        <td class="p-3 text-right font-extrabold text-blue-800">${formatIDR(runningBalance)}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="deleteBku('${b.id}')" title="Hapus BKU" class="p-1 bg-red-50 text-red-600 hover:bg-red-100 rounded">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+
+            document.getElementById('bkuStatPenerimaan').innerText = formatIDR(totalDebet);
+            document.getElementById('bkuStatPengeluaran').innerText = formatIDR(totalKredit);
+            document.getElementById('bkuStatSaldoAkhir').innerText = formatIDR(runningBalance);
+        }
+
+        function openBkuModalForm() {
+            populateRefSpjDropdown();
+            document.getElementById('bkuForm').reset();
+            document.getElementById('bkuInputTanggal').valueAsDate = new Date();
+            document.getElementById('bkuInputModal').classList.remove('hidden');
+        }
+
+        function closeBkuModalForm() {
+            document.getElementById('bkuInputModal').classList.add('hidden');
+        }
+
+        function handleBkuFormSubmit(e) {
+            e.preventDefault();
+            const newBku = {
+                id: 'BKU-' + Date.now(),
+                tanggal: document.getElementById('bkuInputTanggal').value,
+                noBukti: document.getElementById('bkuInputNoBukti').value,
+                kodeRekening: document.getElementById('bkuInputKodeRekening').value,
+                uraian: document.getElementById('bkuInputUraian').value,
+                penerimaan: parseFloat(document.getElementById('bkuInputPenerimaan').value) || 0,
+                pengeluaran: parseFloat(document.getElementById('bkuInputPengeluaran').value) || 0,
+                refSpjId: document.getElementById('bkuInputRefSpj').value
+            };
+
+            bkuList.push(newBku);
+            addLog(`Mencatat transaksi BKU baru (${newBku.noBukti})`);
+            closeBkuModalForm();
+            renderAll();
+            alert('Transaksi BKU berhasil dicatat!');
+        }
+
+        function deleteBku(id) {
+            if(confirm('Yakin ingin menghapus catatan BKU ini?')) {
+                bkuList = bkuList.filter(x => x.id !== id);
+                addLog(`Menghapus catatan BKU ${id}`);
+                renderAll();
+            }
+        }
+
+        // MASTER KODE REKENING LOGIC
+        function renderMasterRekeningTable() {
+            const tbody = document.getElementById('masterRekeningTableBody');
+            tbody.innerHTML = '';
+            masterKodeRekening.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-blue-700">${r.kode}</td>
+                    <td class="p-3 font-bold text-slate-800">${r.nama}</td>
+                    <td class="p-3 font-semibold text-slate-500">${r.kategori}</td>
+                    <td class="p-3 text-right font-bold text-emerald-700">${formatIDR(r.pagu)}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="deleteKodeRekening('${r.kode}')" class="text-red-500 hover:text-red-700 p-1">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openModalTambahKodeRekening() {
+            document.getElementById('rekeningForm').reset();
+            document.getElementById('rekeningInputModal').classList.remove('hidden');
+        }
+
+        function closeModalTambahKodeRekening() {
+            document.getElementById('rekeningInputModal').classList.add('hidden');
+        }
+
+        function handleRekeningFormSubmit(e) {
+            e.preventDefault();
+            const newRek = {
+                kode: document.getElementById('rekInputKode').value,
+                nama: document.getElementById('rekInputNama').value,
+                kategori: document.getElementById('rekInputKategori').value,
+                pagu: parseFloat(document.getElementById('rekInputPagu').value) || 0
+            };
+
+            masterKodeRekening.push(newRek);
+            addLog(`Menambah Master Kode Rekening baru: ${newRek.kode}`);
+            closeModalTambahKodeRekening();
+            populateKodeRekeningDropdowns();
+            renderAll();
+            alert('Kode Rekening berhasil ditambahkan!');
+        }
+
+        function deleteKodeRekening(kode) {
+            if(confirm(`Hapus Kode Rekening ${kode}?`)) {
+                masterKodeRekening = masterKodeRekening.filter(x => x.kode !== kode);
+                populateKodeRekeningDropdowns();
+                renderAll();
+            }
+        }
+
+        // SERAPAN REKENING ANALYSIS
+        function renderSerapanRekeningTable() {
+            const tbody = document.getElementById('serapanRekeningTableBody');
+            tbody.innerHTML = '';
+
+            masterKodeRekening.forEach(r => {
+                let totalRealisasi = 0;
+                bkuList.filter(b => b.kodeRekening === r.kode).forEach(b => {
+                    totalRealisasi += parseFloat(b.pengeluaran) || 0;
+                });
+
+                const sisaPagu = r.pagu - totalRealisasi;
+                const pct = Math.round((totalRealisasi / (r.pagu || 1)) * 100);
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-blue-700">${r.kode}</td>
+                    <td class="p-3 font-bold text-slate-800">${r.nama}</td>
+                    <td class="p-3 text-right font-semibold text-slate-700">${formatIDR(r.pagu)}</td>
+                    <td class="p-3 text-right font-bold text-red-600">${formatIDR(totalRealisasi)}</td>
+                    <td class="p-3 text-right font-bold text-emerald-600">${formatIDR(sisaPagu)}</td>
+                    <td class="p-3 text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${pct > 80 ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}">
+                            ${pct}%
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // SPJ ITEM DYNAMIC ROW LOGIC
+        function addItemRow() {
+            const container = document.getElementById('itemsContainer');
+            const rowId = Date.now() + Math.random().toString(36).substring(2,5);
+            const tr = document.createElement('tr');
+            tr.id = `row-${rowId}`;
+            tr.className = "border-b border-slate-200/80";
+
+            let rekOptions = masterKodeRekening.map(r => `<option value="${r.kode}">${r.kode} - ${r.nama}</option>`).join('');
+
+            tr.innerHTML = `
+                <td class="p-1.5">
+                    <input type="text" placeholder="Uraian item barang / jasa" required class="item-desc w-full text-xs p-2 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500">
+                </td>
+                <td class="p-1.5">
+                    <select class="item-koderek w-full text-xs p-2 border border-slate-300 rounded font-bold text-slate-700">
+                        ${rekOptions}
+                    </select>
+                </td>
+                <td class="p-1.5">
+                    <input type="number" min="1" value="1" oninput="calculateRowTotals(this)" required class="item-vol w-full text-xs p-2 border border-slate-300 rounded text-center">
+                </td>
+                <td class="p-1.5">
+                    <input type="number" min="0" value="0" oninput="calculateRowTotals(this)" required class="item-harga w-full text-xs p-2 border border-slate-300 rounded">
+                </td>
+                <td class="p-1.5">
+                    <select onchange="calculateRowTotals(this)" class="item-taxtype w-full text-xs p-2 border border-slate-300 rounded font-bold text-slate-700">
+                        <option value="NONE">Tanpa Pajak</option>
+                        <option value="PPN11">PPN (11%)</option>
+                        <option value="PPh21">PPh 21 (5%)</option>
+                        <option value="PPh22">PPh 22 (1.5%)</option>
+                        <option value="PPh23">PPh 23 (2%)</option>
+                    </select>
+                </td>
+                <td class="p-1.5">
+                    <input type="text" readonly value="Rp 0" class="item-nettodisplay w-full text-xs p-2 bg-slate-100 border rounded font-bold text-blue-700">
+                </td>
+                <td class="p-1.5 text-center">
+                    <button type="button" onclick="removeItemRow('${rowId}')" class="text-red-500 hover:text-red-700 p-1">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </td>
+            `;
+            container.appendChild(tr);
+            calculateGrandTotals();
+        }
+
+        function removeItemRow(rowId) {
+            if(document.querySelectorAll('#itemsContainer tr').length > 1) {
+                document.getElementById(`row-${rowId}`).remove();
+                calculateGrandTotals();
+            } else {
+                alert('Minimal 1 item pengeluaran wajib ada!');
+            }
+        }
+
+        function calculateRowTotals(elem) {
+            const tr = elem.closest('tr');
+            const vol = parseFloat(tr.querySelector('.item-vol').value) || 0;
+            const harga = parseFloat(tr.querySelector('.item-harga').value) || 0;
+            const taxType = tr.querySelector('.item-taxtype').value;
+
+            const bruto = vol * harga;
+            const { nettoAmount } = calculateItemTax(bruto, taxType);
+
+            tr.querySelector('.item-nettodisplay').value = formatIDR(nettoAmount);
+            calculateGrandTotals();
+        }
+
+        function calculateGrandTotals() {
+            let totalBruto = 0, totalTax = 0, totalNetto = 0;
+
+            document.querySelectorAll('#itemsContainer tr').forEach(tr => {
+                const vol = parseFloat(tr.querySelector('.item-vol').value) || 0;
+                const harga = parseFloat(tr.querySelector('.item-harga').value) || 0;
+                const taxType = tr.querySelector('.item-taxtype').value;
+
+                const bruto = vol * harga;
+                const { taxAmount, nettoAmount } = calculateItemTax(bruto, taxType);
+
+                totalBruto += bruto;
+                totalTax += taxAmount;
+                totalNetto += nettoAmount;
+            });
+
+            document.getElementById('grandBrutoDisplay').innerText = formatIDR(totalBruto);
+            document.getElementById('grandTaxDisplay').innerText = formatIDR(totalTax);
+            document.getElementById('grandNettoDisplay').innerText = formatIDR(totalNetto);
+
+            return { totalBruto, totalTax, totalNetto };
+        }
+
+        // DRAG AND DROP FILE
+        function handleNotaFilesUpload(files) {
+            Array.from(files).forEach(f => {
+                const sizeKB = (f.size / 1024).toFixed(0);
+                const formattedSize = sizeKB > 1024 ? (sizeKB / 1024).toFixed(1) + ' MB' : sizeKB + ' KB';
+                tempNotaFiles.push({ name: f.name, size: formattedSize, type: f.type });
             });
             renderNotaFilesPreview();
         }
 
-        function removeNotaFile(index) {
-            tempNotaFiles.splice(index, 1);
+        function removeNotaFile(idx) {
+            tempNotaFiles.splice(idx, 1);
             renderNotaFilesPreview();
         }
 
         function renderNotaFilesPreview() {
             const container = document.getElementById('uploadedFilesPreview');
             container.innerHTML = '';
-
-            tempNotaFiles.forEach((file, idx) => {
-                const isPdf = file.type.includes('pdf');
-                const icon = isPdf ? 'fa-file-pdf text-red-500' : 'fa-file-image text-blue-500';
-                
+            tempNotaFiles.forEach((f, idx) => {
+                const isPdf = f.type.includes('pdf');
                 const card = document.createElement('div');
-                card.className = "flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg shadow-sm text-xs";
+                card.className = "flex items-center justify-between p-2 bg-white border rounded-lg text-xs shadow-sm";
                 card.innerHTML = `
                     <div class="flex items-center space-x-2 truncate">
-                        <i class="fa-solid ${icon} text-lg"></i>
+                        <i class="fa-solid ${isPdf ? 'fa-file-pdf text-red-500' : 'fa-file-image text-blue-500'} text-base"></i>
                         <div class="truncate">
-                            <p class="font-semibold text-slate-700 truncate">${file.name}</p>
-                            <span class="text-[10px] text-slate-400">${file.size}</span>
+                            <p class="font-bold text-slate-700 truncate text-[11px]">${f.name}</p>
+                            <span class="text-[9px] text-slate-400">${f.size}</span>
                         </div>
                     </div>
-                    <button type="button" onclick="removeNotaFile(${idx})" class="text-slate-400 hover:text-red-500 ml-2">
-                        <i class="fa-solid fa-xmark text-sm"></i>
-                    </button>
+                    <button type="button" onclick="removeNotaFile(${idx})" class="text-slate-400 hover:text-red-500 ml-2"><i class="fa-solid fa-xmark text-xs"></i></button>
                 `;
                 container.appendChild(card);
             });
         }
 
-        // CETAK & DOWNLOAD PDF
-        function exportToPDF() {
-            const element = document.getElementById('printableModal');
-            const opt = {
-                margin:       [0.5, 0.5, 0.5, 0.5],
-                filename:     `Dokumen_${currentDetailId || 'SPJ'}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-            html2pdf().set(opt).from(element).save();
-        }
-
-        // SUBMIT FORM OVERRIDE TO INCLUDE UPLOADED NOTA FILES
+        // SUBMIT FORM SPJ
         function handleFormSubmit(e) {
             e.preventDefault();
 
@@ -838,27 +1760,30 @@
             document.querySelectorAll('#itemsContainer tr').forEach(tr => {
                 items.push({
                     desc: tr.querySelector('.item-desc').value,
+                    kodeRekening: tr.querySelector('.item-koderek').value,
                     vol: parseFloat(tr.querySelector('.item-vol').value) || 1,
-                    harga: parseFloat(tr.querySelector('.item-harga').value) || 0
+                    harga: parseFloat(tr.querySelector('.item-harga').value) || 0,
+                    taxType: tr.querySelector('.item-taxtype').value
                 });
             });
 
+            const newId = generateSpjNumber();
             const newSpj = {
-                id: generateSpjNumber(),
+                id: newId,
                 kegiatan: document.getElementById('inputKegiatan').value,
+                jenisBelanja: document.getElementById('inputJenisBelanja').value,
                 unit: document.getElementById('inputUnit').value,
                 tanggal: document.getElementById('inputTanggal').value,
                 pptk: document.getElementById('inputPptk').value,
                 status: 'Verifikasi',
+                verifNote: 'Menunggu review dokumen.',
                 items: items,
-                total: calculateGrandTotal(),
                 lampiranFiles: [...tempNotaFiles]
             };
 
             spjList.unshift(newSpj);
-            renderAll();
+            addLog(`Mengajukan SPJ Baru ${newId}`);
 
-            // Reset Form & Clear Uploaded Nota
             document.getElementById('spjForm').reset();
             tempNotaFiles = [];
             renderNotaFilesPreview();
@@ -866,69 +1791,18 @@
             addItemRow();
             addItemRow();
 
-            alert('SPJ beserta Berkas Nota berhasil disimpan!');
+            renderAll();
+            alert(`SPJ ${newId} berhasil disimpan!`);
             switchTab('daftar-spj');
         }
 
-        // MODAL ATTACHMENTS VIEW
-        function openDetailModal(id) {
-            currentDetailId = id;
-            const item = spjList.find(x => x.id === id);
-            if(!item) return;
-
-            document.getElementById('modalSpjNo').innerText = item.id;
-            document.getElementById('modalKegiatan').innerText = item.kegiatan;
-            document.getElementById('modalUnit').innerText = item.unit;
-            document.getElementById('modalTanggal').innerText = item.tanggal;
-            document.getElementById('modalPptk').innerText = item.pptk;
-            document.getElementById('modalSignPptk').innerText = item.pptk;
-            document.getElementById('modalTotalAmount').innerText = formatIDR(item.total);
-
-            const badge = document.getElementById('modalStatusBadge');
-            badge.innerText = item.status;
-            badge.className = `px-2.5 py-1 rounded text-xs font-bold ${
-                item.status === 'Disetujui' ? 'bg-emerald-100 text-emerald-800' : 
-                item.status === 'Verifikasi' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'
-            }`;
-
-            // Items Table
-            const tbody = document.getElementById('modalItemsBody');
-            tbody.innerHTML = '';
-            item.items.forEach((it, idx) => {
-                const sub = it.vol * it.harga;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="p-2 border border-slate-200 text-center">${idx + 1}</td>
-                    <td class="p-2 border border-slate-200 font-medium">${it.desc}</td>
-                    <td class="p-2 border border-slate-200 text-center">${it.vol}</td>
-                    <td class="p-2 border border-slate-200 text-right">${formatIDR(it.harga)}</td>
-                    <td class="p-2 border border-slate-200 text-right font-semibold">${formatIDR(sub)}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            // Lampiran Files List Render
-            const attList = document.getElementById('modalAttachmentsList');
-            if(item.lampiranFiles && item.lampiranFiles.length > 0) {
-                attList.innerHTML = item.lampiranFiles.map(f => 
-                    `<a href="#" onclick="alert('Membuka file preview: ${f.name}')" class="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 px-2 py-1 rounded text-[10px] font-bold flex items-center">
-                        <i class="fa-solid fa-paperclip mr-1"></i>${f.name} (${f.size})
-                    </a>`
-                ).join('');
-            } else {
-                attList.innerHTML = '<span class="text-slate-400 text-xs">Tidak ada file nota terlampir</span>';
-            }
-
-            document.getElementById('detailModal').classList.remove('hidden');
-        }
-
-        // Table Render Update for Lampiran Files
+        // RENDER SPJ TABLE
         function renderMainTable(data) {
             const tbody = document.getElementById('mainSpjTableBody');
             const emptyNotice = document.getElementById('emptyTableNotice');
             tbody.innerHTML = '';
 
-            if(data.length === 0) {
+            if(!data || data.length === 0) {
                 emptyNotice.classList.remove('hidden');
                 return;
             } else {
@@ -936,39 +1810,51 @@
             }
 
             data.forEach(item => {
+                let totalTax = 0, totalNetto = 0;
+                item.items.forEach(it => {
+                    const b = it.vol * it.harga;
+                    const { taxAmount, nettoAmount } = calculateItemTax(b, it.taxType);
+                    totalTax += taxAmount;
+                    totalNetto += nettoAmount;
+                });
+
+                let statusBadge = '';
+                if(item.status === 'Disetujui') statusBadge = '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded text-[10px]"><i class="fa-solid fa-check mr-1"></i>Disetujui</span>';
+                else if(item.status === 'Verifikasi') statusBadge = '<span class="px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded text-[10px]"><i class="fa-solid fa-clock mr-1"></i>Verifikasi</span>';
+                else if(item.status === 'Ditolak') statusBadge = '<span class="px-2 py-0.5 bg-red-100 text-red-800 font-bold rounded text-[10px]"><i class="fa-solid fa-xmark mr-1"></i>Ditolak</span>';
+                else statusBadge = '<span class="px-2 py-0.5 bg-slate-100 text-slate-700 font-bold rounded text-[10px]">Draft</span>';
+
+                const fileCount = item.lampiranFiles ? item.lampiranFiles.length : 0;
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition-colors";
 
-                let statusBadge = '';
-                if(item.status === 'Disetujui') statusBadge = '<span class="px-2 py-1 bg-emerald-100 text-emerald-700 font-bold rounded-full text-[10px]"><i class="fa-solid fa-check mr-1"></i>Disetujui</span>';
-                else if(item.status === 'Verifikasi') statusBadge = '<span class="px-2 py-1 bg-amber-100 text-amber-700 font-bold rounded-full text-[10px]"><i class="fa-solid fa-clock mr-1"></i>Verifikasi</span>';
-                else if(item.status === 'Ditolak') statusBadge = '<span class="px-2 py-1 bg-red-100 text-red-700 font-bold rounded-full text-[10px]"><i class="fa-solid fa-xmark mr-1"></i>Ditolak</span>';
-                else statusBadge = '<span class="px-2 py-1 bg-slate-100 text-slate-700 font-bold rounded-full text-[10px]">Draft</span>';
-
-                const fileCount = item.lampiranFiles ? item.lampiranFiles.length : 0;
-                let fileBadge = fileCount > 0 
-                    ? `<span class="bg-blue-50 text-blue-600 border border-blue-200 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fa-solid fa-paperclip mr-1"></i>${fileCount} File Nota</span>`
-                    : '<span class="text-slate-400 text-[10px]">Tanpa File</span>';
-
                 tr.innerHTML = `
-                    <td class="p-3.5">
-                        <div class="font-bold text-slate-800">${item.id}</div>
-                        <div class="text-[10px] text-slate-400">${item.tanggal}</div>
+                    <td class="p-3.5 font-bold text-slate-800">
+                        <div>${item.id}</div>
+                        <div class="text-[10px] text-slate-400 font-normal">${item.tanggal}</div>
                     </td>
                     <td class="p-3.5 max-w-xs">
-                        <div class="font-semibold text-slate-700 truncate" title="${item.kegiatan}">${item.kegiatan}</div>
+                        <div class="font-bold text-slate-700 truncate">${item.kegiatan}</div>
                         <div class="text-[10px] text-slate-400">PPTK: ${item.pptk}</div>
                     </td>
-                    <td class="p-3.5 font-medium text-slate-600">${item.unit}</td>
-                    <td class="p-3.5 font-bold text-blue-700">${formatIDR(item.total)}</td>
-                    <td class="p-3.5">${fileBadge}</td>
+                    <td class="p-3.5">
+                        <div class="font-medium text-slate-700">${item.unit}</div>
+                        <span class="text-[9px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 font-bold">${item.jenisBelanja}</span>
+                    </td>
+                    <td class="p-3.5 font-bold text-blue-700">${formatIDR(totalNetto)}</td>
+                    <td class="p-3.5 font-semibold text-amber-600">${formatIDR(totalTax)}</td>
+                    <td class="p-3.5">
+                        <span class="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded text-[10px] font-bold">
+                            <i class="fa-solid fa-paperclip mr-1"></i>${fileCount} File
+                        </span>
+                    </td>
                     <td class="p-3.5 text-center">${statusBadge}</td>
                     <td class="p-3.5 text-center">
                         <div class="flex items-center justify-center space-x-1">
-                            <button onclick="openDetailModal('${item.id}')" title="Detail & Cetak" class="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded transition-all">
+                            <button onclick="openDetailModal('${item.id}')" title="Detail & Cetak" class="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
-                            <button onclick="deleteSpj('${item.id}')" title="Hapus SPJ" class="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded transition-all">
+                            <button onclick="deleteSpj('${item.id}')" title="Hapus SPJ" class="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </div>
@@ -978,147 +1864,211 @@
             });
         }
 
-        // RECENT TABLE IN DASHBOARD
+        // RENDER PRINTABLE BKU OFFICIAL DOCUMENT
+        function openPrintableBKUModal() {
+            const tbody = document.getElementById('bkuPrintTableBody');
+            tbody.innerHTML = '';
+
+            let sortedBku = [...bkuList].sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal));
+            let runningBalance = 0;
+            let totPenerimaan = 0;
+            let totPengeluaran = 0;
+
+            sortedBku.forEach((b, idx) => {
+                runningBalance += (parseFloat(b.penerimaan) || 0) - (parseFloat(b.pengeluaran) || 0);
+                totPenerimaan += parseFloat(b.penerimaan) || 0;
+                totPengeluaran += parseFloat(b.pengeluaran) || 0;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-1 border border-slate-300 text-center">${idx + 1}</td>
+                    <td class="p-1 border border-slate-300">${b.tanggal}</td>
+                    <td class="p-1 border border-slate-300 font-mono font-bold">${b.noBukti}</td>
+                    <td class="p-1 border border-slate-300 font-mono">${b.kodeRekening || '-'}</td>
+                    <td class="p-1 border border-slate-300">${b.uraian}</td>
+                    <td class="p-1 border border-slate-300 text-right">${b.penerimaan > 0 ? formatIDR(b.penerimaan) : '-'}</td>
+                    <td class="p-1 border border-slate-300 text-right">${b.pengeluaran > 0 ? formatIDR(b.pengeluaran) : '-'}</td>
+                    <td class="p-1 border border-slate-300 text-right font-bold">${formatIDR(runningBalance)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('bkuPrintTotalPenerimaan').innerText = formatIDR(totPenerimaan);
+            document.getElementById('bkuPrintTotalPengeluaran').innerText = formatIDR(totPengeluaran);
+            document.getElementById('bkuPrintSaldoAkhir').innerText = formatIDR(runningBalance);
+
+            document.getElementById('bkuPrintModal').classList.remove('hidden');
+        }
+
+        function closePrintableBKUModal() {
+            document.getElementById('bkuPrintModal').classList.add('hidden');
+        }
+
+        function renderAll() {
+            saveToLocalStorage();
+            renderMainTable(spjList);
+            renderBkuTable();
+            renderMasterRekeningTable();
+            renderSerapanRekeningTable();
+            renderRecentTable();
+            renderStats();
+            renderActivityLogs();
+            renderRekapitulasi();
+            renderRealisasi();
+            renderAccountsCards();
+            generateSpjNumber();
+        }
+
         function renderRecentTable() {
             const tbody = document.getElementById('recentTableBody');
             tbody.innerHTML = '';
-            const recent = spjList.slice(0, 4);
-
-            recent.forEach(item => {
+            spjList.slice(0, 4).forEach(item => {
+                let totalNetto = 0;
+                item.items.forEach(it => {
+                    const { nettoAmount } = calculateItemTax(it.vol * it.harga, it.taxType);
+                    totalNetto += nettoAmount;
+                });
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="p-2.5 font-mono font-bold text-blue-600">${item.id}</td>
-                    <td class="p-2.5 truncate max-w-[150px] font-medium">${item.kegiatan}</td>
-                    <td class="p-2.5 font-semibold text-slate-700">${formatIDR(item.total)}</td>
-                    <td class="p-2.5"><span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold">${item.status}</span></td>
+                    <td class="p-2.5 font-bold text-blue-600">${item.id}</td>
+                    <td class="p-2.5 font-medium truncate max-w-[140px]">${item.kegiatan}</td>
+                    <td class="p-2.5 text-[10px] font-semibold text-slate-500">${item.jenisBelanja}</td>
+                    <td class="p-2.5 font-bold text-slate-700">${formatIDR(totalNetto)}</td>
+                    <td class="p-2.5"><span class="text-[9px] px-2 py-0.5 rounded font-bold bg-slate-100 text-slate-600">${item.status}</span></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // DYNAMIC DYNAMIC ITEM INPUT FORM LOGIC
-        function addItemRow() {
-            const container = document.getElementById('itemsContainer');
-            const rowId = Date.now();
-            const tr = document.createElement('tr');
-            tr.id = `item-row-${rowId}`;
-            tr.className = "border-b border-slate-200/60";
+        function renderStats() {
+            document.getElementById('statTotalSPJ').innerText = spjList.length;
+            let totalAnggaran = 0, approvedCount = 0, pendingCount = 0;
 
-            tr.innerHTML = `
-                <td class="p-1.5">
-                    <input type="text" placeholder="Uraian item pengeluaran" required class="item-desc w-full text-xs p-2 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500">
-                </td>
-                <td class="p-1.5">
-                    <input type="number" min="1" value="1" oninput="calculateRowTotal(this)" required class="item-vol w-full text-xs p-2 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500">
-                </td>
-                <td class="p-1.5">
-                    <input type="number" min="0" value="0" oninput="calculateRowTotal(this)" required class="item-harga w-full text-xs p-2 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500">
-                </td>
-                <td class="p-1.5">
-                    <input type="text" readonly value="Rp 0" class="item-subtotal w-full text-xs p-2 bg-slate-100 border border-slate-200 rounded font-semibold text-slate-700">
-                </td>
-                <td class="p-1.5 text-center">
-                    <button type="button" onclick="removeItemRow('${rowId}')" class="text-red-500 hover:text-red-700 p-1">
-                        <i class="fa-solid fa-xmark text-sm"></i>
-                    </button>
-                </td>
-            `;
-            container.appendChild(tr);
-            calculateGrandTotal();
-        }
-
-        function removeItemRow(rowId) {
-            const row = document.getElementById(`item-row-${rowId}`);
-            if(document.querySelectorAll('#itemsContainer tr').length > 1) {
-                row.remove();
-                calculateGrandTotal();
-            } else {
-                alert('Minimal 1 item pengeluaran wajib ada!');
-            }
-        }
-
-        function calculateRowTotal(element) {
-            const tr = element.closest('tr');
-            const vol = parseFloat(tr.querySelector('.item-vol').value) || 0;
-            const harga = parseFloat(tr.querySelector('.item-harga').value) || 0;
-            const subtotal = vol * harga;
-            tr.querySelector('.item-subtotal').value = formatIDR(subtotal);
-            calculateGrandTotal();
-        }
-
-        function calculateGrandTotal() {
-            let grandTotal = 0;
-            document.querySelectorAll('#itemsContainer tr').forEach(tr => {
-                const vol = parseFloat(tr.querySelector('.item-vol').value) || 0;
-                const harga = parseFloat(tr.querySelector('.item-harga').value) || 0;
-                grandTotal += (vol * harga);
+            spjList.forEach(item => {
+                if(item.status === 'Disetujui') {
+                    approvedCount++;
+                    item.items.forEach(it => {
+                        const { nettoAmount } = calculateItemTax(it.vol * it.harga, it.taxType);
+                        totalAnggaran += nettoAmount;
+                    });
+                } else if(item.status === 'Verifikasi') {
+                    pendingCount++;
+                }
             });
-            document.getElementById('grandTotalDisplay').innerText = formatIDR(grandTotal);
-            return grandTotal;
+
+            document.getElementById('statTotalAnggaran').innerText = formatIDR(totalAnggaran);
+            document.getElementById('statApproved').innerText = approvedCount;
+            document.getElementById('statPending').innerText = pendingCount;
         }
 
-        function updateFileStatus(input, statusId) {
-            const statusEl = document.getElementById(statusId);
-            if(input.files && input.files[0]) {
-                statusEl.innerText = '✓ ' + input.files[0].name.substring(0, 10) + '...';
-                statusEl.classList.remove('text-slate-400');
-                statusEl.classList.add('text-emerald-600', 'font-bold');
-            }
+        function renderActivityLogs() {
+            const container = document.getElementById('activityLogContainer');
+            container.innerHTML = '';
+            activityLogs.forEach(l => {
+                const div = document.createElement('div');
+                div.className = "p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs flex items-center justify-between";
+                div.innerHTML = `
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <div>
+                            <span class="font-bold text-slate-800">${l.text}</span>
+                            <span class="text-[10px] text-slate-400 block">Oleh: <code class="font-mono bg-slate-200 px-1 rounded">${l.user}</code></span>
+                        </div>
+                    </div>
+                    <span class="text-[10px] text-slate-400 font-mono">${l.date}</span>
+                `;
+                container.appendChild(div);
+            });
         }
 
-        function generateSpjNumber() {
-            const nextNum = String(spjList.length + 1).padStart(3, '0');
-            const code = `SPJ/2026/${nextNum}`;
-            document.getElementById('generatedSpjNo').innerText = code;
-            return code;
-        }
+        function renderRekapitulasi() {
+            const units = ['Sekretariat', 'Keuangan', 'IT & Operasional', 'SDM & Umum'];
+            const tbody = document.getElementById('rekapTableBody');
+            const cards = document.getElementById('divisiStatCards');
+            tbody.innerHTML = '';
+            cards.innerHTML = '';
 
-        // SUBMIT NEW SPJ FORM
-        function handleFormSubmit(e) {
-            e.preventDefault();
+            units.forEach(u => {
+                const unitItems = spjList.filter(x => x.unit === u);
+                let uBruto = 0, uTax = 0, uNetto = 0;
 
-            const items = [];
-            document.querySelectorAll('#itemsContainer tr').forEach(tr => {
-                items.push({
-                    desc: tr.querySelector('.item-desc').value,
-                    vol: parseFloat(tr.querySelector('.item-vol').value) || 1,
-                    harga: parseFloat(tr.querySelector('.item-harga').value) || 0
+                unitItems.forEach(item => {
+                    item.items.forEach(it => {
+                        const b = it.vol * it.harga;
+                        const { taxAmount, nettoAmount } = calculateItemTax(b, it.taxType);
+                        uBruto += b;
+                        uTax += taxAmount;
+                        uNetto += nettoAmount;
+                    });
                 });
+
+                const c = document.createElement('div');
+                c.className = "bg-white border p-4 rounded-xl shadow-sm";
+                c.innerHTML = `
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">${u}</span>
+                    <h4 class="text-base font-bold text-slate-800 mt-1">${formatIDR(uNetto)}</h4>
+                    <p class="text-[10px] text-slate-400 mt-0.5">${unitItems.length} SPJ Pengajuan</p>
+                `;
+                cards.appendChild(c);
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-slate-800">${u}</td>
+                    <td class="p-3 text-center font-bold">${unitItems.length}</td>
+                    <td class="p-3 font-semibold">${formatIDR(uBruto)}</td>
+                    <td class="p-3 font-semibold text-amber-600">${formatIDR(uTax)}</td>
+                    <td class="p-3 font-bold text-blue-700">${formatIDR(uNetto)}</td>
+                `;
+                tbody.appendChild(tr);
             });
-
-            // Simulasi Lampiran
-            const lampiran = [];
-            if(document.getElementById('fileKwitansi').files.length > 0) lampiran.push('Kwitansi');
-            if(document.getElementById('fileNota').files.length > 0) lampiran.push('Nota');
-            if(document.getElementById('fileBast').files.length > 0) lampiran.push('BAST');
-            if(document.getElementById('fileNodin').files.length > 0) lampiran.push('Nota Dinas');
-
-            const newSpj = {
-                id: generateSpjNumber(),
-                kegiatan: document.getElementById('inputKegiatan').value,
-                unit: document.getElementById('inputUnit').value,
-                tanggal: document.getElementById('inputTanggal').value,
-                pptk: document.getElementById('inputPptk').value,
-                status: 'Verifikasi',
-                items: items,
-                total: calculateGrandTotal(),
-                lampiran: lampiran.length > 0 ? lampiran : ['Kwitansi']
-            };
-
-            spjList.unshift(newSpj);
-            renderAll();
-
-            // Reset Form & Redirect
-            document.getElementById('spjForm').reset();
-            document.getElementById('itemsContainer').innerHTML = '';
-            addItemRow();
-            addItemRow();
-
-            alert('SPJ Berhasil diajukan dan disimpan ke sistem!');
-            switchTab('daftar-spj');
         }
 
-        // DETAIL MODAL & PRINT
+        function renderRealisasi() {
+            const types = ['Belanja Barang/Jasa', 'Belanja Modal', 'Belanja Pegawai', 'Belanja Perjalanan Dinas'];
+            const tbody = document.getElementById('realisasiTableBody');
+            tbody.innerHTML = '';
+
+            types.forEach(t => {
+                const matched = spjList.filter(x => x.jenisBelanja === t && x.status === 'Disetujui');
+                let totalNetto = 0;
+                matched.forEach(item => {
+                    item.items.forEach(it => {
+                        const { nettoAmount } = calculateItemTax(it.vol * it.harga, it.taxType);
+                        totalNetto += nettoAmount;
+                    });
+                });
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-slate-800">${t}</td>
+                    <td class="p-3 text-center font-bold">${matched.length} Transaksi</td>
+                    <td class="p-3 font-bold text-emerald-700">${formatIDR(totalNetto)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderAccountsCards() {
+            const container = document.getElementById('accountsCardsContainer');
+            container.innerHTML = '';
+            Object.keys(appAccounts).forEach(k => {
+                const acc = appAccounts[k];
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-2";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] px-2 py-0.5 rounded font-bold ${acc.badgeClass}">${acc.role}</span>
+                        <i class="fa-solid fa-user-shield text-slate-400"></i>
+                    </div>
+                    <h4 class="font-bold text-xs text-slate-800">${acc.name}</h4>
+                    <p class="text-[11px] text-slate-500">Username: <code class="font-bold bg-slate-200 px-1 rounded">${acc.username}</code></p>
+                    <p class="text-[10px] text-slate-400 italic">${acc.desc}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // OPEN SPJ DETAIL MODAL
         function openDetailModal(id) {
             currentDetailId = id;
             const item = spjList.find(x => x.id === id);
@@ -1127,38 +2077,54 @@
             document.getElementById('modalSpjNo').innerText = item.id;
             document.getElementById('modalKegiatan').innerText = item.kegiatan;
             document.getElementById('modalUnit').innerText = item.unit;
+            document.getElementById('modalJenisBelanja').innerText = item.jenisBelanja;
             document.getElementById('modalTanggal').innerText = item.tanggal;
             document.getElementById('modalPptk').innerText = item.pptk;
             document.getElementById('modalSignPptk').innerText = item.pptk;
-            document.getElementById('modalTotalAmount').innerText = formatIDR(item.total);
 
-            // Status Badge
             const badge = document.getElementById('modalStatusBadge');
             badge.innerText = item.status;
-            badge.className = `px-2.5 py-1 rounded text-xs font-bold ${
-                item.status === 'Disetujui' ? 'bg-emerald-100 text-emerald-800' : 
-                item.status === 'Verifikasi' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'
+            badge.className = `px-2.5 py-0.5 rounded text-[10px] font-bold ${
+                item.status === 'Disetujui' ? 'bg-emerald-100 text-emerald-800' :
+                item.status === 'Verifikasi' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
             }`;
 
-            // Items Table
+            document.getElementById('modalVerifNote').innerText = `Catatan: ${item.verifNote || 'Tidak ada catatan.'}`;
+
             const tbody = document.getElementById('modalItemsBody');
             tbody.innerHTML = '';
+            let totalNetto = 0;
+
             item.items.forEach((it, idx) => {
-                const sub = it.vol * it.harga;
+                const b = it.vol * it.harga;
+                const { taxAmount, nettoAmount } = calculateItemTax(b, it.taxType);
+                totalNetto += nettoAmount;
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="p-2 border border-slate-200 text-center">${idx + 1}</td>
-                    <td class="p-2 border border-slate-200 font-medium">${it.desc}</td>
-                    <td class="p-2 border border-slate-200 text-center">${it.vol}</td>
-                    <td class="p-2 border border-slate-200 text-right">${formatIDR(it.harga)}</td>
-                    <td class="p-2 border border-slate-200 text-right font-semibold">${formatIDR(sub)}</td>
+                    <td class="p-1.5 border border-slate-200 text-center">${idx + 1}</td>
+                    <td class="p-1.5 border border-slate-200 font-medium">${it.desc}</td>
+                    <td class="p-1.5 border border-slate-200 font-mono font-bold text-blue-700">${it.kodeRekening || '-'}</td>
+                    <td class="p-1.5 border border-slate-200 text-center">${it.vol}</td>
+                    <td class="p-1.5 border border-slate-200 text-right">${formatIDR(it.harga)}</td>
+                    <td class="p-1.5 border border-slate-200 text-center font-bold text-amber-600">${it.taxType} (${formatIDR(taxAmount)})</td>
+                    <td class="p-1.5 border border-slate-200 text-right font-bold">${formatIDR(nettoAmount)}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            // Lampiran List
+            document.getElementById('modalTotalAmount').innerText = formatIDR(totalNetto);
+
             const attList = document.getElementById('modalAttachmentsList');
-            attList.innerHTML = item.lampiran.map(l => `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fa-solid fa-paperclip mr-1"></i>${l}</span>`).join('');
+            if(item.lampiranFiles && item.lampiranFiles.length > 0) {
+                attList.innerHTML = item.lampiranFiles.map(f => 
+                    `<span class="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded text-[9px] font-bold flex items-center">
+                        <i class="fa-solid fa-paperclip mr-1"></i>${f.name}
+                    </span>`
+                ).join('');
+            } else {
+                attList.innerHTML = '<span class="text-slate-400 text-[10px]">Tanpa lampiran</span>';
+            }
 
             document.getElementById('detailModal').classList.remove('hidden');
         }
@@ -1168,31 +2134,41 @@
             currentDetailId = null;
         }
 
-        function updateSpjStatus(newStatus) {
+        function updateSpjStatus(newStatus, note = '') {
             if(!currentDetailId) return;
             const idx = spjList.findIndex(x => x.id === currentDetailId);
             if(idx !== -1) {
                 spjList[idx].status = newStatus;
+                if(note) spjList[idx].verifNote = note;
+
+                const activeUser = appAccounts[currentUserKey]?.username || 'system';
+                addLog(`User '${activeUser}' mengubah status ${currentDetailId} menjadi '${newStatus}'`);
+
                 renderAll();
                 openDetailModal(currentDetailId);
             }
         }
 
+        function promptRejectStatus() {
+            const reason = prompt("Masukkan alasan penolakan SPJ:");
+            if(reason) updateSpjStatus('Ditolak', reason);
+        }
+
         function deleteSpj(id) {
-            if(confirm(`Yakin menghapus berkas ${id}?`)) {
+            if(confirm(`Hapus berkas ${id}?`)) {
                 spjList = spjList.filter(x => x.id !== id);
+                addLog(`Menghapus berkas SPJ ${id}`);
                 renderAll();
             }
         }
 
-        // FILTER & SEARCH
         function applyFilters() {
-            const statusVal = document.getElementById('filterStatus').value;
-            const unitVal = document.getElementById('filterUnit').value;
+            const st = document.getElementById('filterStatus').value;
+            const un = document.getElementById('filterUnit').value;
 
-            let filtered = spjList.filter(item => {
-                const matchStatus = (statusVal === 'ALL') || (item.status === statusVal);
-                const matchUnit = (unitVal === 'ALL') || (item.unit === unitVal);
+            const filtered = spjList.filter(i => {
+                const matchStatus = (st === 'ALL') || (i.status === st);
+                const matchUnit = (un === 'ALL') || (i.unit === un);
                 return matchStatus && matchUnit;
             });
 
@@ -1201,10 +2177,10 @@
 
         function filterGlobalData() {
             const query = document.getElementById('globalSearch').value.toLowerCase();
-            const filtered = spjList.filter(item => 
-                item.id.toLowerCase().includes(query) || 
-                item.kegiatan.toLowerCase().includes(query) ||
-                item.unit.toLowerCase().includes(query)
+            const filtered = spjList.filter(i => 
+                i.id.toLowerCase().includes(query) ||
+                i.kegiatan.toLowerCase().includes(query) ||
+                i.unit.toLowerCase().includes(query)
             );
             if(activeTab !== 'daftar-spj') switchTab('daftar-spj');
             renderMainTable(filtered);
@@ -1216,72 +2192,87 @@
             renderMainTable(spjList);
         }
 
-        // REKAPITULASI TAB RENDER
-        function renderRekapitulasi() {
-            const units = ['Sekretariat', 'Keuangan', 'IT & Operasional', 'SDM & Umum'];
-            const tbody = document.getElementById('rekapTableBody');
-            const cardsContainer = document.getElementById('divisiStatCards');
-            tbody.innerHTML = '';
-            cardsContainer.innerHTML = '';
-
-            const grandTotalAll = spjList.reduce((acc, curr) => acc + curr.total, 0) || 1;
-
-            units.forEach(u => {
-                const unitItems = spjList.filter(x => x.unit === u);
-                const totalUnit = unitItems.reduce((acc, curr) => acc + curr.total, 0);
-                const pct = Math.round((totalUnit / grandTotalAll) * 100);
-
-                // Card
-                const card = document.createElement('div');
-                card.className = "bg-slate-50 border border-slate-200 p-4 rounded-xl";
-                card.innerHTML = `
-                    <span class="text-[10px] font-bold uppercase text-slate-400 block">${u}</span>
-                    <p class="text-lg font-bold text-slate-800 mt-1">${formatIDR(totalUnit)}</p>
-                    <p class="text-xs text-slate-500 mt-1">${unitItems.length} Pengajuan SPJ</p>
-                `;
-                cardsContainer.appendChild(card);
-
-                // Table Row
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="p-3 font-semibold text-slate-800">${u}</td>
-                    <td class="p-3 text-center font-bold">${unitItems.length}</td>
-                    <td class="p-3 font-bold text-blue-700">${formatIDR(totalUnit)}</td>
-                    <td class="p-3 text-center">
-                        <div class="flex items-center justify-center space-x-2">
-                            <div class="w-16 bg-slate-200 h-2 rounded-full overflow-hidden">
-                                <div class="bg-blue-600 h-full" style="width: ${pct}%"></div>
-                            </div>
-                            <span class="text-[10px] font-bold text-slate-600">${pct}%</span>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+        function generateSpjNumber() {
+            const nextNum = String(spjList.length + 1).padStart(3, '0');
+            const code = `SPJ/2026/${nextNum}`;
+            const elem = document.getElementById('generatedSpjNo');
+            if(elem) elem.innerText = code;
+            return code;
         }
 
-        // EXPORT CSV UTILITY
-        function quickExportData() {
-            let csvContent = "data:text/csv;charset=utf-8,No SPJ,Tanggal,Kegiatan,Unit,Total Nominal,Status\n";
-            spjList.forEach(row => {
-                csvContent += `"${row.id}","${row.tanggal}","${row.kegiatan}","${row.unit}","${row.total}","${row.status}"\n`;
+        function formatIDR(val) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+        }
+
+        function addLog(text) {
+            const user = appAccounts[currentUserKey]?.username || 'system';
+            const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
+            activityLogs.unshift({ date: now, user: user, text: text });
+            saveToLocalStorage();
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('espj_v4_spj', JSON.stringify(spjList));
+            localStorage.setItem('espj_v4_bku', JSON.stringify(bkuList));
+            localStorage.setItem('espj_v4_rekening', JSON.stringify(masterKodeRekening));
+            localStorage.setItem('espj_v4_logs', JSON.stringify(activityLogs));
+            localStorage.setItem('espj_v4_accounts', JSON.stringify(appAccounts));
+        }
+
+        function exportToPDF() {
+            const element = document.getElementById('printableModal');
+            const opt = {
+                margin:       [0.4, 0.4, 0.4, 0.4],
+                filename:     `Dokumen_${currentDetailId || 'SPJ'}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function exportBKUToPDF() {
+            const element = document.getElementById('printableBKUModal');
+            const opt = {
+                margin:       [0.4, 0.4, 0.4, 0.4],
+                filename:     `Laporan_BKU_Keuangan_2026.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function quickExportCSV() {
+            let csv = "No SPJ,Tanggal,Kegiatan,Unit,Jenis Belanja,PPTK,Status\n";
+            spjList.forEach(r => {
+                csv += `"${r.id}","${r.tanggal}","${r.kegiatan}","${r.unit}","${r.jenisBelanja}","${r.pptk}","${r.status}"\n`;
             });
-            const encodedUri = encodeURI(csvContent);
+            const uri = encodeURI("data:text/csv;charset=utf-8," + csv);
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `Rekap_SPJ_Keuangan_${new Date().toISOString().slice(0,10)}.csv`);
+            link.setAttribute("href", uri);
+            link.setAttribute("download", `Rekap_SPJ_v4_${new Date().toISOString().slice(0,10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        // RESET DEMO DATA
         function resetDemoData() {
-            if(confirm('Kembalikan data ke awal simulasi?')) {
-                localStorage.removeItem('espj_data');
+            if(confirm('Kembalikan seluruh data ke awal simulasi v4.0 Enterprise?')) {
+                localStorage.removeItem('espj_v4_spj');
+                localStorage.removeItem('espj_v4_bku');
+                localStorage.removeItem('espj_v4_rekening');
+                localStorage.removeItem('espj_v4_logs');
+                localStorage.removeItem('espj_v4_accounts');
+
                 spjList = initialSpjData;
+                bkuList = initialBkuData;
+                masterKodeRekening = defaultKodeRekening;
+                activityLogs = initialLogs;
+                appAccounts = defaultAccounts;
+
                 renderAll();
-                alert('Data berhasil di-reset.');
+                alert('Seluruh data berhasil di-reset.');
             }
         }
     </script>
