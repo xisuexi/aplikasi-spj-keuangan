@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Informasi Pengelolaan SPJ Keuangan</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for desktop app feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printableModal, #printableModal * {
+                visibility: visible;
+            }
+            #printableModal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased h-screen overflow-hidden flex flex-col">
+
+    <!-- LOGIN SCREEN MODAL -->
+    <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 transform transition-all">
+            <div class="bg-gradient-to-r from-blue-700 to-indigo-800 p-6 text-white text-center relative">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 mb-3 backdrop-blur-md">
+                    <i class="fa-solid me-0 fa-file-invoice-dollar text-3xl text-blue-200"></i>
+                </div>
+                <h2 class="text-2xl font-bold tracking-wide">E-SPJ Keuangan</h2>
+                <p class="text-blue-100 text-xs mt-1">Sistem Pertanggungjawaban Anggaran Digital</p>
+            </div>
+            
+            <form id="loginForm" class="p-6 space-y-4">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 flex items-start justify-between">
+                    <div>
+                        <span class="font-semibold block mb-0.5"><i class="fa-solid fa-circle-info mr-1"></i> Akun Login Default:</span>
+                        Username: <code class="font-mono font-bold bg-blue-100 px-1 py-0.5 rounded">admin</code> | 
+                        Password: <code class="font-mono font-bold bg-blue-100 px-1 py-0.5 rounded">admin123</code>
+                    </div>
+                    <button type="button" onclick="fillQuickLogin()" class="text-blue-600 hover:text-blue-800 font-medium underline text-xs whitespace-nowrap ml-2">Isi Otomatis</button>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Username</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-user text-sm"></i>
+                        </span>
+                        <input type="text" id="usernameInput" required placeholder="Masukkan username" class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="fa-solid fa-lock text-sm"></i>
+                        </span>
+                        <input type="password" id="passwordInput" required placeholder="••••••••" class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    </div>
+                </div>
+
+                <div id="loginError" class="hidden text-red-600 text-xs font-medium text-center bg-red-50 p-2 rounded border border-red-200">
+                    Username atau password salah!
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center">
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i> Masuk Aplikasi
+                </button>
+                
+                <p class="text-center text-xs text-slate-400 pt-2">© 2026 E-SPJ System v2.4 • Portal Internal Keuangan</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN DESKTOP APP LAYOUT -->
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- SIDEBAR NAV -->
+        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 shadow-xl border-r border-slate-800">
+            <!-- Brand -->
+            <div class="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-950/50">
+                <i class="fa-solid fa-file-invoice-dollar text-blue-500 text-2xl mr-3"></i>
+                <div>
+                    <h1 class="text-base font-bold text-white tracking-wide leading-tight">E-SPJ DESKTOP</h1>
+                    <span class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Keuangan & Anggaran</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white shadow-sm transition-all">
+                    <i class="fa-solid fa-chart-line w-6 text-center text-base mr-2"></i> Dashboard Overview
+                </a>
+                <a href="#" onclick="switchTab('daftar-spj')" id="nav-daftar-spj" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                    <i class="fa-solid fa-folder-open w-6 text-center text-base mr-2"></i> Daftar File SPJ
+                </a>
+                <a href="#" onclick="switchTab('tambah-spj')" id="nav-tambah-spj" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                    <i class="fa-solid fa-circle-plus w-6 text-center text-base mr-2"></i> Input SPJ Baru
+                </a>
+                <a href="#" onclick="switchTab('rekapitulasi')" id="nav-rekapitulasi" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                    <i class="fa-solid fa-calculator w-6 text-center text-base mr-2"></i> Rekapitulasi & Laporan
+                </a>
+                <a href="#" onclick="switchTab('pengaturan')" id="nav-pengaturan" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-all">
+                    <i class="fa-solid fa-gears w-6 text-center text-base mr-2"></i> Pengaturan Sistem
+                </a>
+            </nav>
+
+            <!-- User Info Footer -->
+            <div class="p-4 border-t border-slate-800 bg-slate-950/40">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                            <span id="userAvatar">A</span>
+                        </div>
+                        <div class="overflow-hidden">
+                            <p id="userNameDisplay" class="text-xs font-semibold text-white truncate">Administrator</p>
+                            <p class="text-[10px] text-emerald-400 flex items-center">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Online (Verifikator)
+                            </p>
+                        </div>
+                    </div>
+                    <button onclick="logout()" title="Logout" class="text-slate-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-800 transition-colors">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50">
+            
+            <!-- TOP HEADER -->
+            <header class="h-16 glass-header border-b border-slate-200 flex items-center justify-between px-6 z-10">
+                <div class="flex items-center space-x-4">
+                    <h2 id="pageTitle" class="text-lg font-bold text-slate-800">Dashboard Utama</h2>
+                    <span class="text-xs px-2.5 py-1 bg-slate-200 text-slate-600 rounded-full font-medium">TA 2026</span>
+                </div>
+
+                <!-- Global Search & Actions -->
+                <div class="flex items-center space-x-3">
+                    <div class="relative w-64">
+                        <input type="text" id="globalSearch" onkeyup="filterGlobalData()" placeholder="Cari No SPJ / Kegiatan..." class="w-full text-xs pl-8 pr-3 py-2 bg-slate-100 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+                    </div>
+
+                    <button onclick="quickExportData()" class="px-3 py-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold flex items-center shadow-sm transition-all">
+                        <i class="fa-solid fa-file-excel mr-1.5"></i> Export CSV
+                    </button>
+                </div>
+            </header>
+
+            <!-- CONTAINER VIEWS -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+
+                <!-- SECTION 1: DASHBOARD OVERVIEW -->
+                <section id="view-dashboard" class="tab-content space-y-6">
+                    <!-- Stat Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-slate-500 font-semibold uppercase">Total Berkas SPJ</p>
+                                <h3 id="statTotalSPJ" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                                <p class="text-[11px] text-slate-400 mt-1"><span class="text-emerald-600 font-bold"><i class="fa-solid fa-arrow-up"></i> +12%</span> dari bulan lalu</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-folder-closed"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-slate-500 font-semibold uppercase">Total Realisasi Anggaran</p>
+                                <h3 id="statTotalAnggaran" class="text-xl font-bold text-slate-800 mt-1">Rp 0</h3>
+                                <p class="text-[11px] text-slate-400 mt-1">Sesuai SPJ Terverifikasi</p>
+                            </div>
+                            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-wallet"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-slate-500 font-semibold uppercase">SPJ Disetujui</p>
+                                <h3 id="statApproved" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+                                <p class="text-[11px] text-emerald-600 font-medium mt-1"><i class="fa-solid fa-check-circle"></i> Selesai & Lunas</p>
+                            </div>
+                            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-slate-500 font-semibold uppercase">Pending Verifikasi</p>
+                                <h3 id="statPending" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+                                <p class="text-[11px] text-amber-600 font-medium mt-1"><i class="fa-solid fa-clock"></i> Membutuhkan Review</p>
+                            </div>
+                            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-hourglass-half"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activities & Quick Table -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Table Mini -->
+                        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-bold text-slate-800 text-sm">SPJ Terakhir Diajukan</h3>
+                                <button onclick="switchTab('daftar-spj')" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">Lihat Semua →</button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs text-slate-600">
+                                    <thead class="bg-slate-50 text-slate-700 uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                        <tr>
+                                            <th class="p-2.5">No SPJ</th>
+                                            <th class="p-2.5">Nama Kegiatan</th>
+                                            <th class="p-2.5">Nominal</th>
+                                            <th class="p-2.5">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentTableBody" class="divide-y divide-slate-100">
+                                        <!-- Dynamic mini rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Info Card / Guidance -->
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-sm mb-3"><i class="fa-solid fa-list-check text-blue-600 mr-2"></i>Kelengkapan Dokumen SPJ</h3>
+                                <p class="text-xs text-slate-600 leading-relaxed mb-4"> Setiaporang/unit wajib melengkapi 4 kelengkapan fisik file saat upload SPJ Keuangan:</p>
+                                <ul class="space-y-2 text-xs text-slate-600">
+                                    <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Nota Dinas Pembayaran</li>
+                                    <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Kwitansi Resmi Bermaterai</li>
+                                    <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i> Nota Belanja / Faktur Toko</li>
+                                    <li class="flex items-center"><i class="fa-solid fa-check text-emerald-500 mr-2"></i> BAST (Berita Acara Serah Terima)</li>
+                                </ul>
+                            </div>
+                            <button onclick="switchTab('tambah-spj')" class="w-full mt-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow transition-all">
+                                <i class="fa-solid fa-plus mr-1"></i> Buat SPJ Baru Sekarang
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 2: DAFTAR FILE SPJ -->
+                <section id="view-daftar-spj" class="tab-content hidden space-y-4">
+                    <!-- Filter Toolbar -->
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                            <!-- Filter Status -->
+                            <div>
+                                <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Filter Status</label>
+                                <select id="filterStatus" onchange="applyFilters()" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="ALL">Semua Status</option>
+                                    <option value="Draft">Draft</option>
+                                    <option value="Verifikasi">Dalam Verifikasi</option>
+                                    <option value="Disetujui">Disetujui</option>
+                                    <option value="Ditolak">Ditolak</option>
+                                </select>
+                            </div>
+
+                            <!-- Filter Unit -->
+                            <div>
+                                <label class="text-[10px] font-bold uppercase text-slate-400 block mb-1">Filter Divisi/Unit</label>
+                                <select id="filterUnit" onchange="applyFilters()" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="ALL">Semua Divisi</option>
+                                    <option value="Sekretariat">Sekretariat</option>
+                                    <option value="Keuangan">Keuangan & Akuntansi</option>
+                                    <option value="IT & Operasional">IT & Operasional</option>
+                                    <option value="SDM & Umum">SDM & Umum</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <button onclick="resetFilters()" class="px-3 py-1.5 text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg font-medium transition-all">
+                                <i class="fa-solid fa-rotate-left mr-1"></i> Reset
+                            </button>
+                            <button onclick="switchTab('tambah-spj')" class="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all">
+                                <i class="fa-solid fa-plus mr-1"></i> Tambah SPJ
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main SPJ Table Card -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-600">
+                                <thead class="bg-slate-100 text-slate-700 uppercase text-[11px] font-bold border-b border-slate-200">
+                                    <tr>
+                                        <th class="p-3.5">No. SPJ & Tanggal</th>
+                                        <th class="p-3.5">Nama Kegiatan / Program</th>
+                                        <th class="p-3.5">Divisi / Unit</th>
+                                        <th class="p-3.5">Total Nominal</th>
+                                        <th class="p-3.5">Lampiran Berkas</th>
+                                        <th class="p-3.5 text-center">Status</th>
+                                        <th class="p-3.5 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mainSpjTableBody" class="divide-y divide-slate-200">
+                                    <!-- Dynamic rows from JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Empty State Notice -->
+                        <div id="emptyTableNotice" class="hidden p-8 text-center text-slate-400">
+                            <i class="fa-regular fa-folder-open text-4xl mb-2"></i>
+                            <p class="text-sm">Tidak ada data SPJ yang cocok dengan pencarian / filter.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 3: FORM TAMBAH SPJ BARU -->
+                <section id="view-tambah-spj" class="tab-content hidden max-w-4xl mx-auto space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <div class="border-b border-slate-200 pb-4 mb-6 flex justify-between items-center">
+                            <div>
+                                <h3 class="text-base font-bold text-slate-800">Formulir Input SPJ Baru</h3>
+                                <p class="text-xs text-slate-500">Lengkapi data pertanggungjawaban beserta rincian pengeluaran secara lengkap.</p>
+                            </div>
+                            <span class="text-xs font-mono bg-blue-50 text-blue-700 px-2.5 py-1 rounded border border-blue-200 font-bold" id="generatedSpjNo">SPJ/2026/000</span>
+                        </div>
+
+                        <form id="spjForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                            <!-- Informasi Utama -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Kegiatan <span class="text-red-500">*</span></label>
+                                    <input type="text" id="inputKegiatan" required placeholder="Contoh: Pengadaan Alat Tulis & Printer Office" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Divisi / Unit Kerja <span class="text-red-500">*</span></label>
+                                    <select id="inputUnit" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                        <option value="">-- Pilih Divisi --</option>
+                                        <option value="Sekretariat">Sekretariat</option>
+                                        <option value="Keuangan">Keuangan & Akuntansi</option>
+                                        <option value="IT & Operasional">IT & Operasional</option>
+                                        <option value="SDM & Umum">SDM & Umum</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal Pengajuan <span class="text-red-500">*</span></label>
+                                    <input type="date" id="inputTanggal" required class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Penanggung Jawab (PPTK) <span class="text-red-500">*</span></label>
+                                    <input type="text" id="inputPptk" required placeholder="Nama Pejabat / Staf Pengaju" class="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <!-- Dynamic Items Table Rincian Pengeluaran -->
+                            <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-xs font-bold uppercase text-slate-700"><i class="fa-solid fa-list-ol mr-1.5 text-blue-600"></i> Rincian Item Pengeluaran</h4>
+                                    <button type="button" onclick="addItemRow()" class="px-2.5 py-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-all">
+                                        <i class="fa-solid fa-plus mr-1"></i> Tambah Item
+                                    </button>
+                                </div>
+
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-xs">
+                                        <thead class="text-slate-500 font-semibold uppercase text-[10px]">
+                                            <tr>
+                                                <th class="p-2 w-1/2">Deskripsi Barang/Jasa</th>
+                                                <th class="p-2 w-24">Volume</th>
+                                                <th class="p-2 w-36">Harga Satuan (Rp)</th>
+                                                <th class="p-2 w-36">Total (Rp)</th>
+                                                <th class="p-2 text-center w-12">#</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="itemsContainer" class="space-y-2">
+                                            <!-- Dynamic Rows injected via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Total Calculation Bar -->
+                                <div class="mt-4 pt-3 border-t border-slate-200 flex justify-end items-center space-x-3">
+                                    <span class="text-xs font-bold text-slate-600">TOTAL SPJ KESELURUHAN:</span>
+                                    <span id="grandTotalDisplay" class="text-base font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-lg border border-blue-200">Rp 0</span>
+                                </div>
+                            </div>
+
+                            <!-- Upload Berkas Lampiran Simulasi -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2">Simulasi Upload Lampiran File (PDF / Gambar / Doc)</label>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <label class="border border-dashed border-slate-300 rounded-lg p-3 text-center cursor-pointer hover:bg-slate-50 transition-all block">
+                                        <i class="fa-solid fa-file-invoice text-slate-400 text-xl mb-1 block"></i>
+                                        <span class="text-[11px] font-medium text-slate-600 block">Kwitansi</span>
+                                        <input type="file" id="fileKwitansi" class="hidden" onchange="updateFileStatus(this, 'statusKwitansi')">
+                                        <span id="statusKwitansi" class="text-[10px] text-slate-400 mt-1 block">Belum ada</span>
+                                    </label>
+
+                                    <label class="border border-dashed border-slate-300 rounded-lg p-3 text-center cursor-pointer hover:bg-slate-50 transition-all block">
+                                        <i class="fa-solid fa-receipt text-slate-400 text-xl mb-1 block"></i>
+                                        <span class="text-[11px] font-medium text-slate-600 block">Nota / Toko</span>
+                                        <input type="file" id="fileNota" class="hidden" onchange="updateFileStatus(this, 'statusNota')">
+                                        <span id="statusNota" class="text-[10px] text-slate-400 mt-1 block">Belum ada</span>
+                                    </label>
+
+                                    <label class="border border-dashed border-slate-300 rounded-lg p-3 text-center cursor-pointer hover:bg-slate-50 transition-all block">
+                                        <i class="fa-solid fa-file-signature text-slate-400 text-xl mb-1 block"></i>
+                                        <span class="text-[11px] font-medium text-slate-600 block">BAST</span>
+                                        <input type="file" id="fileBast" class="hidden" onchange="updateFileStatus(this, 'statusBast')">
+                                        <span id="statusBast" class="text-[10px] text-slate-400 mt-1 block">Belum ada</span>
+                                    </label>
+
+                                    <label class="border border-dashed border-slate-300 rounded-lg p-3 text-center cursor-pointer hover:bg-slate-50 transition-all block">
+                                        <i class="fa-solid fa-envelope-open-text text-slate-400 text-xl mb-1 block"></i>
+                                        <span class="text-[11px] font-medium text-slate-600 block">Nota Dinas</span>
+                                        <input type="file" id="fileNodin" class="hidden" onchange="updateFileStatus(this, 'statusNodin')">
+                                        <span id="statusNodin" class="text-[10px] text-slate-400 mt-1 block">Belum ada</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Action Submit -->
+                            <div class="flex justify-end space-x-3 pt-3 border-t border-slate-200">
+                                <button type="button" onclick="switchTab('daftar-spj')" class="px-4 py-2 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg transition-all">
+                                    Batal
+                                </button>
+                                <button type="submit" class="px-5 py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all">
+                                    <i class="fa-solid fa-paper-plane mr-1"></i> Simpan & Ajukan SPJ
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- SECTION 4: REKAPITULASI & LAPORAN -->
+                <section id="view-rekapitulasi" class="tab-content hidden space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                        <h3 class="text-base font-bold text-slate-800 mb-1">Rekapitulasi Anggaran per Divisi</h3>
+                        <p class="text-xs text-slate-500 mb-6">Ringkasan total pencairan realisasi dana berdasarkan Surat Pertanggungjawaban.</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="divisiStatCards">
+                            <!-- Injected by JS -->
+                        </div>
+
+                        <div class="border border-slate-200 rounded-xl overflow-hidden">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
+                                    <tr>
+                                        <th class="p-3">Nama Divisi / Unit</th>
+                                        <th class="p-3 text-center">Jumlah SPJ</th>
+                                        <th class="p-3">Total Serapan Dana</th>
+                                        <th class="p-3 text-center">Persentase</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rekapTableBody" class="divide-y divide-slate-200">
+                                    <!-- Injected JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 5: PENGATURAN -->
+                <section id="view-pengaturan" class="tab-content hidden space-y-6">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 max-w-2xl">
+                        <h3 class="text-base font-bold text-slate-800 mb-4">Pengaturan Sistem E-SPJ</h3>
+                        
+                        <div class="space-y-4 text-xs">
+                            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                <span class="font-bold block text-slate-700 mb-1">Reset Data Simulasi</span>
+                                <p class="text-slate-500 mb-2">Kembalikan data tabel SPJ ke sampel awal (default dataset demo).</p>
+                                <button onclick="resetDemoData()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded font-medium transition-all">
+                                    <i class="fa-solid fa-arrows-rotate mr-1"></i> Reset Data Demo
+                                </button>
+                            </div>
+
+                            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                <span class="font-bold block text-slate-700 mb-1">Informasi Aplikasi Hosting</span>
+                                <p class="text-slate-500">Aplikasi ini berjalan secara Client-Side Vanilla JS dan siap untuk dihosting gratis menggunakan <b>GitHub Pages</b>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL DETAIL & PRINT PREVIEW SPJ -->
+    <div id="detailModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
+            <!-- Modal Header -->
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center no-print">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-file-invoice text-blue-400 text-lg"></i>
+                    <h3 class="font-bold text-sm" id="modalTitle">Rincian Lembar SPJ</h3>
+                </div>
+                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Printable Body -->
+            <div id="printableModal" class="p-6 overflow-y-auto space-y-6 text-xs text-slate-700">
+                <!-- Header Dokumen SPJ -->
+                <div class="text-center border-b-2 border-slate-800 pb-4">
+                    <h2 class="text-lg font-bold uppercase tracking-wide text-slate-900">SURAT PERTANGGUNGJAWABAN (SPJ) KEUANGAN</h2>
+                    <p class="text-xs text-slate-500 font-mono" id="modalSpjNo">SPJ/2026/001</p>
+                </div>
+
+                <!-- Info Grid -->
+                <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Nama Kegiatan</span>
+                        <p class="font-bold text-slate-800 text-sm" id="modalKegiatan">-</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Divisi / Unit Kerja</span>
+                        <p class="font-semibold text-slate-800" id="modalUnit">-</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Tanggal Pengajuan</span>
+                        <p class="font-semibold text-slate-800" id="modalTanggal">-</p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block">Penanggung Jawab (PPTK)</span>
+                        <p class="font-semibold text-slate-800" id="modalPptk">-</p>
+                    </div>
+                </div>
+
+                <!-- Items Detail -->
+                <div>
+                    <h4 class="font-bold uppercase text-slate-800 mb-2 border-b pb-1">Rincian Item Pengeluaran</h4>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-slate-300 text-slate-700 uppercase text-[10px]">
+                                <th class="p-2 border border-slate-200">No</th>
+                                <th class="p-2 border border-slate-200">Deskripsi Barang/Jasa</th>
+                                <th class="p-2 border border-slate-200 text-center">Vol</th>
+                                <th class="p-2 border border-slate-200 text-right">Harga Satuan</th>
+                                <th class="p-2 border border-slate-200 text-right">Total Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalItemsBody">
+                            <!-- Injected by JS -->
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-slate-50 font-bold">
+                                <td colspan="4" class="p-2 border border-slate-200 text-right uppercase">Total Rincian SPJ:</td>
+                                <td class="p-2 border border-slate-200 text-right text-blue-700 font-bold text-sm" id="modalTotalAmount">Rp 0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Verified Status & Attachments -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="border border-slate-200 p-3 rounded-lg">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Status Verifikasi</span>
+                        <span id="modalStatusBadge" class="px-2 py-0.5 rounded text-[11px] font-bold">Draft</span>
+                    </div>
+
+                    <div class="border border-slate-200 p-3 rounded-lg">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Berkas Lampiran Ada</span>
+                        <div class="flex flex-wrap gap-1" id="modalAttachmentsList">
+                            <!-- Injected JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tanda Tangan Digital Area (For Print) -->
+                <div class="pt-8 grid grid-cols-2 text-center text-xs">
+                    <div>
+                        <p>Diverifikasi Oleh,</p>
+                        <p class="font-bold mt-12">Bendahara Keuangan</p>
+                    </div>
+                    <div>
+                        <p>Yang Mengajukan,</p>
+                        <p class="font-bold mt-12" id="modalSignPptk">PPTK Kegiatan</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div class="bg-slate-100 p-4 border-t border-slate-200 flex justify-between items-center no-print">
+                <div class="flex items-center space-x-2" id="statusChangeActions">
+                    <span class="text-xs font-semibold text-slate-500">Ubah Status:</span>
+                    <button onclick="updateSpjStatus('Disetujui')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded font-medium">Setujui</button>
+                    <button onclick="updateSpjStatus('Ditolak')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded font-medium">Tolak</button>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="window.print()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg flex items-center shadow-sm">
+                        <i class="fa-solid fa-print mr-1.5"></i> Cetak Dokumen SPJ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // DATA INITIAL STATE & SAMPLE DEMO
+        const initialSpjData = [
+            {
+                id: 'SPJ/2026/001',
+                kegiatan: 'Pengadaan APD & Perlangkapan Kesehatan Kerja',
+                unit: 'SDM & Umum',
+                tanggal: '2026-02-10',
+                pptk: 'Budi Santoso, S.ST',
+                status: 'Disetujui',
+                items: [
+                    { desc: 'Masker Medis Box', vol: 10, harga: 35000 },
+                    { desc: 'Hand Sanitizer 5L', vol: 4, harga: 150000 }
+                ],
+                total: 950000,
+                lampiran: ['Kwitansi', 'Nota', 'BAST']
+            },
+            {
+                id: 'SPJ/2026/002',
+                kegiatan: 'Maintenance Server & Lisensi Cloud Database',
+                unit: 'IT & Operasional',
+                tanggal: '2026-02-18',
+                pptk: 'Eko Prasetyo, M.Kom',
+                status: 'Verifikasi',
+                items: [
+                    { desc: 'Sewa Cloud Storage Server 1 Thn', vol: 1, harga: 4500000 },
+                    { desc: 'SSL Wildcard Certificate', vol: 1, harga: 1200000 }
+                ],
+                total: 5700000,
+                lampiran: ['Kwitansi', 'Nota Dinas']
+            },
+            {
+                id: 'SPJ/2026/003',
+                kegiatan: 'Rapat Koordinasi Penyusunan Anggaran Tahunan',
+                unit: 'Keuangan',
+                tanggal: '2026-02-22',
+                pptk: 'Siti Rahma, SE',
+                status: 'Disetujui',
+                items: [
+                    { desc: 'Konsumsi Rapat / Snack (30 porsi)', vol: 30, harga: 25000 },
+                    { desc: 'Sewa Ruang Rapat & Projector', vol: 1, harga: 750000 }
+                ],
+                total: 1500000,
+                lampiran: ['Kwitansi', 'Nota', 'BAST', 'Nota Dinas']
+            }
+        ];
+
+        // Store App State
+        let spjList = JSON.parse(localStorage.getItem('espj_data')) || initialSpjData;
+        let activeTab = 'dashboard';
+        let currentDetailId = null;
+
+        // ON INITIAL LOAD
+        window.onload = function() {
+            // Check login status
+            const currentUser = localStorage.getItem('espj_user');
+            if(!currentUser) {
+                document.getElementById('loginModal').classList.remove('hidden');
+            } else {
+                document.getElementById('loginModal').classList.add('hidden');
+                document.getElementById('userNameDisplay').innerText = currentUser;
+                document.getElementById('userAvatar').innerText = currentUser.charAt(0).toUpperCase();
+            }
+
+            // Initialize default items in input form
+            addItemRow();
+            addItemRow();
+            
+            // Set current date in form
+            document.getElementById('inputTanggal').valueAsDate = new Date();
+
+            // Render views
+            renderAll();
+        };
+
+        // LOGIN SYSTEM
+        function fillQuickLogin() {
+            document.getElementById('usernameInput').value = 'admin';
+            document.getElementById('passwordInput').value = 'admin123';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const u = document.getElementById('usernameInput').value;
+            const p = document.getElementById('passwordInput').value;
+
+            if((u === 'admin' && p === 'admin123') || (u === 'admin' && p === 'spj2026')) {
+                localStorage.setItem('espj_user', u);
+                document.getElementById('loginModal').classList.add('hidden');
+                document.getElementById('userNameDisplay').innerText = u;
+                document.getElementById('userAvatar').innerText = u.charAt(0).toUpperCase();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        });
+
+        function logout() {
+            if(confirm('Apakah Anda yakin ingin keluar dari aplikasi?')) {
+                localStorage.removeItem('espj_user');
+                location.reload();
+            }
+        }
+
+        // NAVIGATION TAB SYSTEM
+        function switchTab(tabId) {
+            activeTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-blue-600', 'text-white');
+                el.classList.add('text-slate-400');
+            });
+
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if(activeNav) {
+                activeNav.classList.add('bg-blue-600', 'text-white');
+                activeNav.classList.remove('text-slate-400');
+            }
+
+            // Update Page Header Title
+            const titles = {
+                'dashboard': 'Dashboard Overview',
+                'daftar-spj': 'Daftar Rincian File SPJ',
+                'tambah-spj': 'Input Berkas SPJ Baru',
+                'rekapitulasi': 'Rekapitulasi Realisasi Anggaran',
+                'pengaturan': 'Pengaturan Sistem'
+            };
+            document.getElementById('pageTitle').innerText = titles[tabId] || 'E-SPJ Keuangan';
+
+            renderAll();
+        }
+
+        // CURRENCY FORMATTER HELPER
+        function formatIDR(number) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
+        }
+
+        // RENDER EVERYTHING
+        function renderAll() {
+            saveToLocalStorage();
+            renderStats();
+            renderMainTable(spjList);
+            renderRecentTable();
+            renderRekapitulasi();
+            generateSpjNumber();
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('espj_data', JSON.stringify(spjList));
+        }
+
+        // STATS CALCULATIONS
+        function renderStats() {
+            const totalSPJ = spjList.length;
+            const totalAnggaran = spjList.reduce((acc, curr) => acc + (curr.status === 'Disetujui' ? curr.total : 0), 0);
+            const countApproved = spjList.filter(x => x.status === 'Disetujui').length;
+            const countPending = spjList.filter(x => x.status === 'Verifikasi' || x.status === 'Draft').length;
+
+            document.getElementById('statTotalSPJ').innerText = totalSPJ;
+            document.getElementById('statTotalAnggaran').innerText = formatIDR(totalAnggaran);
+            document.getElementById('statApproved').innerText = countApproved;
+            document.getElementById('statPending').innerText = countPending;
+        }
+
+        // MAIN TABLE RENDER
+        function renderMainTable(data) {
+            const tbody = document.getElementById('mainSpjTableBody');
+            const emptyNotice = document.getElementById('emptyTableNotice');
+            tbody.innerHTML = '';
+
+            if(data.length === 0) {
+                emptyNotice.classList.remove('hidden');
+                return;
+            } else {
+                emptyNotice.classList.add('hidden');
+            }
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+
+                let statusBadge = '';
+                if(item.status === 'Disetujui') statusBadge = '<span class="px-2 py-1 bg-emerald-100 text-emerald-700 font-bold rounded-full text-[10px]"><i class="fa-solid fa-check mr-1"></i>Disetujui</span>';
+                else if(item.status === 'Verifikasi') statusBadge = '<span class="px-2 py-1 bg-amber-100 text-amber-700 font-bold rounded-full text-[10px]"><i class="fa-solid fa-clock mr-1"></i>Verifikasi</span>';
+                else if(item.status === 'Ditolak') statusBadge = '<span class="px-2 py-1 bg-red-100 text-red-700 font-bold rounded-full text-[10px]"><i class="fa-solid fa-xmark mr-1"></i>Ditolak</span>';
+                else statusBadge = '<span class="px-2 py-1 bg-slate-100 text-slate-700 font-bold rounded-full text-[10px]">Draft</span>';
+
+                let lampiranBadges = item.lampiran && item.lampiran.length > 0 
+                    ? item.lampiran.map(l => `<span class="bg-blue-50 text-blue-600 border border-blue-200 px-1.5 py-0.5 rounded text-[9px] mr-1">${l}</span>`).join('')
+                    : '<span class="text-slate-400 text-[10px]">Tidak Ada</span>';
+
+                tr.innerHTML = `
+                    <td class="p-3.5">
+                        <div class="font-bold text-slate-800">${item.id}</div>
+                        <div class="text-[10px] text-slate-400">${item.tanggal}</div>
+                    </td>
+                    <td class="p-3.5 max-w-xs">
+                        <div class="font-semibold text-slate-700 truncate" title="${item.kegiatan}">${item.kegiatan}</div>
+                        <div class="text-[10px] text-slate-400">PPTK: ${item.pptk}</div>
+                    </td>
+                    <td class="p-3.5 font-medium text-slate-600">${item.unit}</td>
+                    <td class="p-3.5 font-bold text-blue-700">${formatIDR(item.total)}</td>
+                    <td class="p-3.5">${lampiranBadges}</td>
+                    <td class="p-3.5 text-center">${statusBadge}</td>
+                    <td class="p-3.5 text-center">
+                        <div class="flex items-center justify-center space-x-1">
+                            <button onclick="openDetailModal('${item.id}')" title="Detail & Cetak" class="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded transition-all">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button onclick="deleteSpj('${item.id}')" title="Hapus SPJ" class="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded transition-all">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // RECENT TABLE IN DASHBOARD
+        function renderRecentTable() {
+            const tbody = document.getElementById('recentTableBody');
+            tbody.innerHTML = '';
+            const recent = spjList.slice(0, 4);
+
+            recent.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2.5 font-mono font-bold text-blue-600">${item.id}</td>
+                    <td class="p-2.5 truncate max-w-[150px] font-medium">${item.kegiatan}</td>
+                    <td class="p-2.5 font-semibold text-slate-700">${formatIDR(item.total)}</td>
+                    <td class="p-2.5"><span class="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold">${item.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // DYNAMIC DYNAMIC ITEM INPUT FORM LOGIC
+        function addItemRow() {
+            const container = document.getElementById('itemsContainer');
+            const rowId = Date.now();
+            const tr = document.createElement('tr');
+            tr.id = `item-row-${rowId}`;
+            tr.className = "border-b border-slate-200/60";
+
+            tr.innerHTML = `
+                <td class="p-1.5">
+                    <input type="text" placeholder="Uraian item pengeluaran" required class="item-desc w-full text-xs p-2 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500">
+                </td>
+                <td class="p-1.5">
+                    <input type="number" min="1" value="1" oninput="calculateRowTotal(this)" required class="item-vol w-full text-xs p-2 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500">
+                </td>
+                <td class="p-1.5">
+                    <input type="number" min="0" value="0" oninput="calculateRowTotal(this)" required class="item-harga w-full text-xs p-2 border border-slate-300 rounded focus:ring-1 focus:ring-blue-500">
+                </td>
+                <td class="p-1.5">
+                    <input type="text" readonly value="Rp 0" class="item-subtotal w-full text-xs p-2 bg-slate-100 border border-slate-200 rounded font-semibold text-slate-700">
+                </td>
+                <td class="p-1.5 text-center">
+                    <button type="button" onclick="removeItemRow('${rowId}')" class="text-red-500 hover:text-red-700 p-1">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </td>
+            `;
+            container.appendChild(tr);
+            calculateGrandTotal();
+        }
+
+        function removeItemRow(rowId) {
+            const row = document.getElementById(`item-row-${rowId}`);
+            if(document.querySelectorAll('#itemsContainer tr').length > 1) {
+                row.remove();
+                calculateGrandTotal();
+            } else {
+                alert('Minimal 1 item pengeluaran wajib ada!');
+            }
+        }
+
+        function calculateRowTotal(element) {
+            const tr = element.closest('tr');
+            const vol = parseFloat(tr.querySelector('.item-vol').value) || 0;
+            const harga = parseFloat(tr.querySelector('.item-harga').value) || 0;
+            const subtotal = vol * harga;
+            tr.querySelector('.item-subtotal').value = formatIDR(subtotal);
+            calculateGrandTotal();
+        }
+
+        function calculateGrandTotal() {
+            let grandTotal = 0;
+            document.querySelectorAll('#itemsContainer tr').forEach(tr => {
+                const vol = parseFloat(tr.querySelector('.item-vol').value) || 0;
+                const harga = parseFloat(tr.querySelector('.item-harga').value) || 0;
+                grandTotal += (vol * harga);
+            });
+            document.getElementById('grandTotalDisplay').innerText = formatIDR(grandTotal);
+            return grandTotal;
+        }
+
+        function updateFileStatus(input, statusId) {
+            const statusEl = document.getElementById(statusId);
+            if(input.files && input.files[0]) {
+                statusEl.innerText = '✓ ' + input.files[0].name.substring(0, 10) + '...';
+                statusEl.classList.remove('text-slate-400');
+                statusEl.classList.add('text-emerald-600', 'font-bold');
+            }
+        }
+
+        function generateSpjNumber() {
+            const nextNum = String(spjList.length + 1).padStart(3, '0');
+            const code = `SPJ/2026/${nextNum}`;
+            document.getElementById('generatedSpjNo').innerText = code;
+            return code;
+        }
+
+        // SUBMIT NEW SPJ FORM
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const items = [];
+            document.querySelectorAll('#itemsContainer tr').forEach(tr => {
+                items.push({
+                    desc: tr.querySelector('.item-desc').value,
+                    vol: parseFloat(tr.querySelector('.item-vol').value) || 1,
+                    harga: parseFloat(tr.querySelector('.item-harga').value) || 0
+                });
+            });
+
+            // Simulasi Lampiran
+            const lampiran = [];
+            if(document.getElementById('fileKwitansi').files.length > 0) lampiran.push('Kwitansi');
+            if(document.getElementById('fileNota').files.length > 0) lampiran.push('Nota');
+            if(document.getElementById('fileBast').files.length > 0) lampiran.push('BAST');
+            if(document.getElementById('fileNodin').files.length > 0) lampiran.push('Nota Dinas');
+
+            const newSpj = {
+                id: generateSpjNumber(),
+                kegiatan: document.getElementById('inputKegiatan').value,
+                unit: document.getElementById('inputUnit').value,
+                tanggal: document.getElementById('inputTanggal').value,
+                pptk: document.getElementById('inputPptk').value,
+                status: 'Verifikasi',
+                items: items,
+                total: calculateGrandTotal(),
+                lampiran: lampiran.length > 0 ? lampiran : ['Kwitansi']
+            };
+
+            spjList.unshift(newSpj);
+            renderAll();
+
+            // Reset Form & Redirect
+            document.getElementById('spjForm').reset();
+            document.getElementById('itemsContainer').innerHTML = '';
+            addItemRow();
+            addItemRow();
+
+            alert('SPJ Berhasil diajukan dan disimpan ke sistem!');
+            switchTab('daftar-spj');
+        }
+
+        // DETAIL MODAL & PRINT
+        function openDetailModal(id) {
+            currentDetailId = id;
+            const item = spjList.find(x => x.id === id);
+            if(!item) return;
+
+            document.getElementById('modalSpjNo').innerText = item.id;
+            document.getElementById('modalKegiatan').innerText = item.kegiatan;
+            document.getElementById('modalUnit').innerText = item.unit;
+            document.getElementById('modalTanggal').innerText = item.tanggal;
+            document.getElementById('modalPptk').innerText = item.pptk;
+            document.getElementById('modalSignPptk').innerText = item.pptk;
+            document.getElementById('modalTotalAmount').innerText = formatIDR(item.total);
+
+            // Status Badge
+            const badge = document.getElementById('modalStatusBadge');
+            badge.innerText = item.status;
+            badge.className = `px-2.5 py-1 rounded text-xs font-bold ${
+                item.status === 'Disetujui' ? 'bg-emerald-100 text-emerald-800' : 
+                item.status === 'Verifikasi' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'
+            }`;
+
+            // Items Table
+            const tbody = document.getElementById('modalItemsBody');
+            tbody.innerHTML = '';
+            item.items.forEach((it, idx) => {
+                const sub = it.vol * it.harga;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2 border border-slate-200 text-center">${idx + 1}</td>
+                    <td class="p-2 border border-slate-200 font-medium">${it.desc}</td>
+                    <td class="p-2 border border-slate-200 text-center">${it.vol}</td>
+                    <td class="p-2 border border-slate-200 text-right">${formatIDR(it.harga)}</td>
+                    <td class="p-2 border border-slate-200 text-right font-semibold">${formatIDR(sub)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Lampiran List
+            const attList = document.getElementById('modalAttachmentsList');
+            attList.innerHTML = item.lampiran.map(l => `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fa-solid fa-paperclip mr-1"></i>${l}</span>`).join('');
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            currentDetailId = null;
+        }
+
+        function updateSpjStatus(newStatus) {
+            if(!currentDetailId) return;
+            const idx = spjList.findIndex(x => x.id === currentDetailId);
+            if(idx !== -1) {
+                spjList[idx].status = newStatus;
+                renderAll();
+                openDetailModal(currentDetailId);
+            }
+        }
+
+        function deleteSpj(id) {
+            if(confirm(`Yakin menghapus berkas ${id}?`)) {
+                spjList = spjList.filter(x => x.id !== id);
+                renderAll();
+            }
+        }
+
+        // FILTER & SEARCH
+        function applyFilters() {
+            const statusVal = document.getElementById('filterStatus').value;
+            const unitVal = document.getElementById('filterUnit').value;
+
+            let filtered = spjList.filter(item => {
+                const matchStatus = (statusVal === 'ALL') || (item.status === statusVal);
+                const matchUnit = (unitVal === 'ALL') || (item.unit === unitVal);
+                return matchStatus && matchUnit;
+            });
+
+            renderMainTable(filtered);
+        }
+
+        function filterGlobalData() {
+            const query = document.getElementById('globalSearch').value.toLowerCase();
+            const filtered = spjList.filter(item => 
+                item.id.toLowerCase().includes(query) || 
+                item.kegiatan.toLowerCase().includes(query) ||
+                item.unit.toLowerCase().includes(query)
+            );
+            if(activeTab !== 'daftar-spj') switchTab('daftar-spj');
+            renderMainTable(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('filterStatus').value = 'ALL';
+            document.getElementById('filterUnit').value = 'ALL';
+            renderMainTable(spjList);
+        }
+
+        // REKAPITULASI TAB RENDER
+        function renderRekapitulasi() {
+            const units = ['Sekretariat', 'Keuangan', 'IT & Operasional', 'SDM & Umum'];
+            const tbody = document.getElementById('rekapTableBody');
+            const cardsContainer = document.getElementById('divisiStatCards');
+            tbody.innerHTML = '';
+            cardsContainer.innerHTML = '';
+
+            const grandTotalAll = spjList.reduce((acc, curr) => acc + curr.total, 0) || 1;
+
+            units.forEach(u => {
+                const unitItems = spjList.filter(x => x.unit === u);
+                const totalUnit = unitItems.reduce((acc, curr) => acc + curr.total, 0);
+                const pct = Math.round((totalUnit / grandTotalAll) * 100);
+
+                // Card
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 border border-slate-200 p-4 rounded-xl";
+                card.innerHTML = `
+                    <span class="text-[10px] font-bold uppercase text-slate-400 block">${u}</span>
+                    <p class="text-lg font-bold text-slate-800 mt-1">${formatIDR(totalUnit)}</p>
+                    <p class="text-xs text-slate-500 mt-1">${unitItems.length} Pengajuan SPJ</p>
+                `;
+                cardsContainer.appendChild(card);
+
+                // Table Row
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-slate-800">${u}</td>
+                    <td class="p-3 text-center font-bold">${unitItems.length}</td>
+                    <td class="p-3 font-bold text-blue-700">${formatIDR(totalUnit)}</td>
+                    <td class="p-3 text-center">
+                        <div class="flex items-center justify-center space-x-2">
+                            <div class="w-16 bg-slate-200 h-2 rounded-full overflow-hidden">
+                                <div class="bg-blue-600 h-full" style="width: ${pct}%"></div>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-600">${pct}%</span>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // EXPORT CSV UTILITY
+        function quickExportData() {
+            let csvContent = "data:text/csv;charset=utf-8,No SPJ,Tanggal,Kegiatan,Unit,Total Nominal,Status\n";
+            spjList.forEach(row => {
+                csvContent += `"${row.id}","${row.tanggal}","${row.kegiatan}","${row.unit}","${row.total}","${row.status}"\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Rekap_SPJ_Keuangan_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // RESET DEMO DATA
+        function resetDemoData() {
+            if(confirm('Kembalikan data ke awal simulasi?')) {
+                localStorage.removeItem('espj_data');
+                spjList = initialSpjData;
+                renderAll();
+                alert('Data berhasil di-reset.');
+            }
+        }
+    </script>
+</body>
+</html>
